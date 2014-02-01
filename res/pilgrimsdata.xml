@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?><!--current player: aglub19hcHBfaWRyDgsSCEdhbWVVc2VyGAEM -->
+<datamodel xmlns="http://www.w3.org/2005/07/scxml">
+	<data name="state">
+		<template xmlns="http://www.livegameengine.com/schemas/pilgrims.xsd">
+			<playerTemplate colors="red green blue orange">
+				<development count="5" type="settlement" />
+				<development count="4" type="city" />
+				<development count="15" type="road" />
+			</playerTemplate>
+			<polys values="5 2 6 3 8 10 9 12 11 4 8 10 9 4 5 6 3 11">
+				<poly x="0" y="2" />
+				<poly x="3" y="1" />
+				<poly x="6" y="0" />
+				<poly x="9" y="1" />
+				<poly x="12" y="2" />
+				<poly x="12" y="4" />
+				<poly x="12" y="6" />
+				<poly x="9" y="7" />
+				<poly x="6" y="8" />
+				<poly x="3" y="7" />
+				<poly x="0" y="6" />
+				<poly x="0" y="4" />
+				<poly x="3" y="3" />
+				<poly x="6" y="2" />
+				<poly x="9" y="3" />
+				<poly x="9" y="5" />
+				<poly x="6" y="6" />
+				<poly x="3" y="5" />
+				<poly x="6" y="4" />
+			</polys>
+			<ports>
+				<port resource="Ore" tradeIn="2" tradeOut="1" />
+				<port resource="Grain" tradeIn="2" tradeOut="1" />
+				<port resource="Wool" tradeIn="2" tradeOut="1" />
+				<port resource="Brick" tradeIn="2" tradeOut="1" />
+				<port resource="Wood" tradeIn="2" tradeOut="1" />
+				<port tradeIn="3" tradeOut="1" />
+				<port tradeIn="3" tradeOut="1" />
+				<port tradeIn="3" tradeOut="1" />
+				<port tradeIn="3" tradeOut="1" />
+				<locations>
+					<vertex x="10" y="1" />
+					<vertex x="12" y="1" />
+					<vertex x="15" y="2" />
+					<vertex x="16" y="3" />
+					<vertex x="16" y="5" />
+					<vertex x="15" y="6" />
+					<vertex x="13" y="8" />
+					<vertex x="12" y="9" />
+					<vertex x="9" y="10" />
+					<vertex x="7" y="10" />
+					<vertex x="4" y="9" />
+					<vertex x="3" y="8" />
+					<vertex x="1" y="6" />
+					<vertex x="0" y="5" />
+					<vertex x="0" y="3" />
+					<vertex x="1" y="2" />
+					<vertex x="4" y="1" />
+					<vertex x="6" y="1" />
+				</locations>
+			</ports>
+		</template>
+		<board xmlns="http://www.livegameengine.com/schemas/pilgrims.xsd">
+			<maxPlayers>4</maxPlayers>
+			<minPlayers>2</minPlayers>
+			<currentPlayer>0</currentPlayer>
+			<polys>
+				<poly x="0" y="2" />
+				<poly x="3" y="1" />
+				<poly x="6" y="0" />
+				<poly x="9" y="1" />
+				<poly x="12" y="2" />
+				<poly x="12" y="4" />
+				<poly x="12" y="6" />
+				<poly x="9" y="7" />
+				<poly x="6" y="8" />
+				<poly x="3" y="7" />
+				<poly x="0" y="6" />
+				<poly x="0" y="4" />
+				<poly x="3" y="3" />
+				<poly x="6" y="2" />
+				<poly x="9" y="3" />
+				<poly x="9" y="5" />
+				<poly x="6" y="6" />
+				<poly x="3" y="5" />
+				<poly x="6" y="4" />
+			</polys>
+			<verteces>
+				<vertex x="1" y="2" />
+				<vertex x="3" y="2" />
+				<vertex x="4" y="3" />
+				<vertex x="3" y="4" />
+				<vertex x="1" y="4" />
+				<vertex x="0" y="3" />
+				<vertex x="4" y="1" />
+				<vertex x="6" y="1" />
+				<vertex x="7" y="2" />
+				<vertex x="6" y="3" />
+				<vertex x="7" y="0" />
+				<vertex x="9" y="0" />
+				<vertex x="10" y="1" />
+				<vertex x="9" y="2" />
+				<vertex x="12" y="1" />
+				<vertex x="13" y="2" />
+				<vertex x="12" y="3" />
+				<vertex x="10" y="3" />
+				<vertex x="15" y="2" />
+				<vertex x="16" y="3" />
+				<vertex x="15" y="4" />
+				<vertex x="13" y="4" />
+				<vertex x="16" y="5" />
+				<vertex x="15" y="6" />
+				<vertex x="13" y="6" />
+				<vertex x="12" y="5" />
+				<vertex x="16" y="7" />
+				<vertex x="15" y="8" />
+				<vertex x="13" y="8" />
+				<vertex x="12" y="7" />
+				<vertex x="10" y="7" />
+				<vertex x="12" y="9" />
+				<vertex x="10" y="9" />
+				<vertex x="9" y="8" />
+				<vertex x="7" y="8" />
+				<vertex x="9" y="10" />
+				<vertex x="7" y="10" />
+				<vertex x="6" y="9" />
+				<vertex x="4" y="7" />
+				<vertex x="6" y="7" />
+				<vertex x="4" y="9" />
+				<vertex x="3" y="8" />
+				<vertex x="1" y="6" />
+				<vertex x="3" y="6" />
+				<vertex x="1" y="8" />
+				<vertex x="0" y="7" />
+				<vertex x="4" y="5" />
+				<vertex x="0" y="5" />
+				<vertex x="7" y="4" />
+				<vertex x="6" y="5" />
+				<vertex x="9" y="4" />
+				<vertex x="10" y="5" />
+				<vertex x="9" y="6" />
+				<vertex x="7" y="6" />
+			</verteces>
+			<edges>
+				<edge x1="0" x2="1" y1="3" y2="2" />
+				<edge x1="1" x2="3" y1="2" y2="2" />
+				<edge x1="3" x2="4" y1="2" y2="3" />
+				<edge x1="3" x2="4" y1="4" y2="3" />
+				<edge x1="1" x2="3" y1="4" y2="4" />
+				<edge x1="0" x2="1" y1="3" y2="4" />
+				<edge x1="3" x2="4" y1="2" y2="1" />
+				<edge x1="4" x2="6" y1="1" y2="1" />
+				<edge x1="6" x2="7" y1="1" y2="2" />
+				<edge x1="6" x2="7" y1="3" y2="2" />
+				<edge x1="4" x2="6" y1="3" y2="3" />
+				<edge x1="6" x2="7" y1="1" y2="0" />
+				<edge x1="7" x2="9" y1="0" y2="0" />
+				<edge x1="9" x2="10" y1="0" y2="1" />
+				<edge x1="9" x2="10" y1="2" y2="1" />
+				<edge x1="7" x2="9" y1="2" y2="2" />
+				<edge x1="10" x2="12" y1="1" y2="1" />
+				<edge x1="12" x2="13" y1="1" y2="2" />
+				<edge x1="12" x2="13" y1="3" y2="2" />
+				<edge x1="10" x2="12" y1="3" y2="3" />
+				<edge x1="9" x2="10" y1="2" y2="3" />
+				<edge x1="13" x2="15" y1="2" y2="2" />
+				<edge x1="15" x2="16" y1="2" y2="3" />
+				<edge x1="15" x2="16" y1="4" y2="3" />
+				<edge x1="13" x2="15" y1="4" y2="4" />
+				<edge x1="12" x2="13" y1="3" y2="4" />
+				<edge x1="12" x2="13" y1="5" y2="4" />
+				<edge x1="15" x2="16" y1="4" y2="5" />
+				<edge x1="15" x2="16" y1="6" y2="5" />
+				<edge x1="13" x2="15" y1="6" y2="6" />
+				<edge x1="12" x2="13" y1="5" y2="6" />
+				<edge x1="12" x2="13" y1="7" y2="6" />
+				<edge x1="15" x2="16" y1="6" y2="7" />
+				<edge x1="15" x2="16" y1="8" y2="7" />
+				<edge x1="13" x2="15" y1="8" y2="8" />
+				<edge x1="12" x2="13" y1="7" y2="8" />
+				<edge x1="9" x2="10" y1="8" y2="7" />
+				<edge x1="10" x2="12" y1="7" y2="7" />
+				<edge x1="12" x2="13" y1="9" y2="8" />
+				<edge x1="10" x2="12" y1="9" y2="9" />
+				<edge x1="9" x2="10" y1="8" y2="9" />
+				<edge x1="6" x2="7" y1="9" y2="8" />
+				<edge x1="7" x2="9" y1="8" y2="8" />
+				<edge x1="9" x2="10" y1="10" y2="9" />
+				<edge x1="7" x2="9" y1="10" y2="10" />
+				<edge x1="6" x2="7" y1="9" y2="10" />
+				<edge x1="3" x2="4" y1="8" y2="7" />
+				<edge x1="4" x2="6" y1="7" y2="7" />
+				<edge x1="6" x2="7" y1="7" y2="8" />
+				<edge x1="4" x2="6" y1="9" y2="9" />
+				<edge x1="3" x2="4" y1="8" y2="9" />
+				<edge x1="0" x2="1" y1="7" y2="6" />
+				<edge x1="1" x2="3" y1="6" y2="6" />
+				<edge x1="3" x2="4" y1="6" y2="7" />
+				<edge x1="1" x2="3" y1="8" y2="8" />
+				<edge x1="0" x2="1" y1="7" y2="8" />
+				<edge x1="0" x2="1" y1="5" y2="4" />
+				<edge x1="3" x2="4" y1="4" y2="5" />
+				<edge x1="3" x2="4" y1="6" y2="5" />
+				<edge x1="0" x2="1" y1="5" y2="6" />
+				<edge x1="6" x2="7" y1="3" y2="4" />
+				<edge x1="6" x2="7" y1="5" y2="4" />
+				<edge x1="4" x2="6" y1="5" y2="5" />
+				<edge x1="9" x2="10" y1="4" y2="3" />
+				<edge x1="7" x2="9" y1="4" y2="4" />
+				<edge x1="10" x2="12" y1="5" y2="5" />
+				<edge x1="9" x2="10" y1="4" y2="5" />
+				<edge x1="9" x2="10" y1="6" y2="5" />
+				<edge x1="9" x2="10" y1="6" y2="7" />
+				<edge x1="6" x2="7" y1="7" y2="6" />
+				<edge x1="7" x2="9" y1="6" y2="6" />
+				<edge x1="6" x2="7" y1="5" y2="6" />
+			</edges>
+			<players>
+				<player>
+					<playerId>aglub19hcHBfaWRyDgsSCEdhbWVVc2VyGAEM</playerId>
+					<color>red</color>
+					<resources>
+						<resource count="0" type="Ore" />
+						<resource count="0" type="Grain" />
+						<resource count="0" type="Wool" />
+						<resource count="0" type="Brick" />
+						<resource count="0" type="Wood" />
+					</resources>
+					<development count="5" type="settlement" />
+					<development count="4" type="city" />
+					<development count="15" type="road" />
+				</player>
+				<player>
+					<playerId>aglub19hcHBfaWRyDgsSCEdhbWVVc2VyGAEM</playerId>
+					<color>green</color>
+					<resources>
+						<resource count="0" type="Ore" />
+						<resource count="0" type="Grain" />
+						<resource count="0" type="Wool" />
+						<resource count="0" type="Brick" />
+						<resource count="0" type="Wood" />
+					</resources>
+					<development count="5" type="settlement" />
+					<development count="4" type="city" />
+					<development count="15" type="road" />
+				</player>
+			</players>
+			<polytypes>
+				<polytype count="3" produces="Ore" type="Mountains" />
+				<polytype count="4" produces="Grain" type="Fields" />
+				<polytype count="4" produces="Wool" type="Pasture" />
+				<polytype count="3" produces="Brick" type="Hills" />
+				<polytype count="4" produces="Wood" type="Forest" />
+				<polytype count="1" type="Desert" />
+			</polytypes>
+			<resources>
+				<resource type="Ore" />
+				<resource type="Grain" />
+				<resource type="Wool" />
+				<resource type="Brick" />
+				<resource type="Wood" />
+			</resources>
+			<developments>
+				<development cost="1 Grain, 1 Wool, 1 Brick, 1 Wood"
+					type="settlement" />
+				<development cost="3 Ore, 2 Grain" type="city" />
+				<development cost="1 Wood, 1 Brick" type="road" />
+			</developments>
+			<ports>
+				<port resource="Ore" tradeIn="2" tradeOut="1" x="10" y="1" />
+				<port resource="Ore" tradeIn="2" tradeOut="1" x="12" y="1" />
+				<port resource="Grain" tradeIn="2" tradeOut="1" x="15" y="2" />
+				<port resource="Grain" tradeIn="2" tradeOut="1" x="16" y="3" />
+				<port resource="" tradeIn="3" tradeOut="1" x="16" y="5" />
+				<port resource="" tradeIn="3" tradeOut="1" x="15" y="6" />
+				<port resource="" tradeIn="3" tradeOut="1" x="13" y="8" />
+				<port resource="" tradeIn="3" tradeOut="1" x="12" y="9" />
+				<port resource="Wood" tradeIn="2" tradeOut="1" x="9" y="10" />
+				<port resource="Wood" tradeIn="2" tradeOut="1" x="7" y="10" />
+				<port resource="Brick" tradeIn="2" tradeOut="1" x="4" y="9" />
+				<port resource="Brick" tradeIn="2" tradeOut="1" x="3" y="8" />
+				<port resource="Wool" tradeIn="2" tradeOut="1" x="1" y="6" />
+				<port resource="Wool" tradeIn="2" tradeOut="1" x="0" y="5" />
+				<port resource="" tradeIn="3" tradeOut="1" x="0" y="3" />
+				<port resource="" tradeIn="3" tradeOut="1" x="1" y="2" />
+				<port resource="" tradeIn="3" tradeOut="1" x="4" y="1" />
+				<port resource="" tradeIn="3" tradeOut="1" x="6" y="1" />
+			</ports>
+			<firstPlacement>true</firstPlacement>
+		</board>
+	</data>
+</datamodel>

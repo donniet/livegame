@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.5" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee                http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+  <!-- Servlets -->
+  <servlet>
+    <servlet-name>homeServlet</servlet-name>
+    <servlet-class>com.livegameengine.web.HomeServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>gameTypeServlet</servlet-name>
+    <servlet-class>com.livegameengine.web.GameTypeServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>gameServlet</servlet-name>
+    <servlet-class>com.livegameengine.web.GameServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>homeJspServlet</servlet-name>
+    <jsp-file>/WEB-INF/home.jsp</jsp-file>
+  </servlet>
+  <servlet>
+    <servlet-name>gameTypeJspServlet</servlet-name>
+    <jsp-file>/WEB-INF/type.jsp</jsp-file>
+  </servlet>
+	<servlet>
+		<servlet-name>ChannelPresenceServlet</servlet-name>
+		<servlet-class>com.livegameengine.web.ChannelPresenceServlet</servlet-class>
+	</servlet>
+  
+  <servlet-mapping>
+    <servlet-name>homeServlet</servlet-name>
+    <url-pattern>/</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>gameTypeServlet</servlet-name>
+    <url-pattern>/type/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>gameServlet</servlet-name>
+    <url-pattern>/game/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+  	<servlet-name>homeJspServlet</servlet-name>
+  	<url-pattern>/WEB-INF/home.jsp</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+  	<servlet-name>gameTypeJspServlet</servlet-name>
+  	<url-pattern>/WEB-INF/type.jsp</url-pattern>
+  </servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>ChannelPresenceServlet</servlet-name>
+		<url-pattern>/_ah/channel/*</url-pattern>
+	</servlet-mapping>
+
+  <servlet>
+    <servlet-name>SystemServiceServlet</servlet-name>
+    <servlet-class>com.google.api.server.spi.SystemServiceServlet</servlet-class>
+    <init-param>
+      <param-name>services</param-name>
+      <param-value/>
+    </init-param>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>SystemServiceServlet</servlet-name>
+    <url-pattern>/_ah/spi/*</url-pattern>
+  </servlet-mapping>
+
+</web-app>

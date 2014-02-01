@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<view:doc xmlns:view="http://www.livegameengine.com/schemas/view.xsd"
+	xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:xalan="http://xml.apache.org/xalan"
+	xmlns:scxml="http://www.w3.org/2005/07/scxml" xmlns:game="http://www.livegameengine.com/schemas/game.xsd"
+	xmlns:tic="http://www.livegameengine.com/schemas/games/tictactoe.xsd"
+	xmlns="http://www.w3.org/1999/xhtml">
+
+	<view:meta>
+		<view:title>Tic Tac Toe</view:title>
+		<view:styles>
+			td { width: 100px; height: 100px; border: solid 1px black; }
+			.highlight { background-color: rgb(50,50,255); }
+		</view:styles>
+		<view:scripts />
+	</view:meta>
+	<view:body>
+		<div>
+			<input value="Start" type="button">
+				<view:event on="click" gameEvent="start" />
+			</input>
+			<input value="Join" type="button">
+				<view:event on="click" gameEvent="join" />
+			</input>
+		</div>
+		<table>
+			<tr>
+				<td>
+					<view:event endpointEvent="click" on="click">
+						<tic:square y="0" x="0" />
+					</view:event>
+				</td>
+				<td>
+					<view:event endpointEvent="click" on="click">
+						<tic:square y="0" x="1" />
+					</view:event>
+				</td>
+				<td>
+					<view:event endpointEvent="click" on="click">
+						<tic:square y="0" x="2" />
+					</view:event>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<view:event endpointEvent="click" on="click">
+						<tic:square y="1" x="0" />
+					</view:event>
+				</td>
+				<td>
+					<view:event endpointEvent="click" on="click">
+						<tic:square y="1" x="1" />
+					</view:event>
+				</td>
+				<td>
+					<view:event endpointEvent="click" on="click">
+						<tic:square y="1" x="2" />
+					</view:event>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<view:event endpointEvent="click" on="click">
+						<tic:square y="2" x="0" />
+					</view:event>
+				</td>
+				<td>
+					<view:event endpointEvent="click" on="click">
+						<tic:square y="2" x="1" />
+					</view:event>
+				</td>
+				<td>
+					<view:event endpointEvent="click" on="click">
+						<tic:square y="2" x="2" />
+					</view:event>
+				</td>
+			</tr>
+		</table>
+		<view:eventHandler handler-mode="append"
+			element-namespace="http://www.w3.org/1999/xhtml" element-name="ul"
+			event="game.playerJoin">
+			<view:result>
+				<li>{
+					selectContent('//game:gameUser/game:nickname/text()').nodeValue } {
+					selectContent('//game:gameUser/game:userid/text()').nodeValue }
+				</li>
+			</view:result>
+			<view:defaultValue />
+		</view:eventHandler>
+	</view:body>
+</view:doc>

@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8" ?> 
+<scxml xmlns="http://www.w3.org/2005/07/scxml" 
+	xmlns:game="http://www.livegameengine.com/schemas/game.xsd" 
+	xmlns:tic="http://www.livegameengine.com/schemas/games/tictactoe.xsd"
+	initialstate="initializing">
+<datamodel>
+	<script>//<![CDATA[
+		g = "http://www.livegameengine.com/schemas/games/tictactoe.xsd";
+		gamens = new Namespace(g);
+		default xml namespace = g;
+		
+		var gamens = "http://www.livegameengine.com/schemas/game.xsd";
+			
+		// returns X, O, C (for cat's game) or null if the game is incomplete
+		function getWinner() {
+			log.info("test for winner...");
+		
+			var winner = null;
+			
+			var boardFull = true;
+			
+			// check rows;
+	 		for(var i = 0; i < 3; i++) {
+	 			if(boardFull)
+	 				boardFull = board.board.row[i].col[0].mark.length() > 0;
+	 			
+	 			winner = board.board.row[i].col[0].mark.length() > 0 ? board.board.row[i].col[0].mark.@player : null;
+	 			
+				for(var j = 1; winner != null && j < 3; j++) {
+					if(boardFull)
+	 					boardFull = board.board.row[i].col[j].mark.length() > 0;
+					
+					if(board.board.row[i].col[j].mark.length() == 0 || winner != board.board.row[i].col[j].mark.@player) {
+						winner = null;
+					}
+				}
+				
+				if(winner != null) {
+					for(var j = 0; j < 3; j++) {
+						board.board.row[i].col[j].@highlight = "true";
+					}
+					return winner;
+				}
+			} 
+			
+			// check cols
+			for(var j = 0; j < 3; j++) {
+	 			winner = board.board.row[0].col[j].mark.length() > 0 ? board.board.row[0].col[j].mark.@player : null;
+				
+				for(var i = 1; winner != null && i < 3; i++) {
+					if(board.board.row[i].col[j].mark.length() == 0 || winner != board.board.row[i].col[j].mark.@player) {
+						winner = null;
+					}
+				}
+				
+				if(winner != null) {
+					for(var i = 0; i < 3; i++) {
+						board.board.row[i].col[j].@highlight = "true";
+					}
+					return winner;
+				}
+			}
+			
+			// check diag
+	 		winner = board.board.row[0].col[0].mark.length() > 0 ? board.board.row[0].col[0].mark.@player : null;
+			for(var i = 1; winner != null && i < 3; i++) {
+				if(board.board.row[i].col[i].mark.length() == 0 || winner != board.board.row[i].col[i].mark.@player) {
+					winner = null;
+				}
+			}
+			
+			if(winner != null) {
+				for(var i = 0; i < 3; i++) {
+					board.board.row[i].col[i].@highlight = "true";
+				}
+				return winner;
+			}
+			
+	 		winner = board.board.row[2].col[0].mark.length() > 0 ? board.board.row[2].col[0].mark.@player : null;
+			for(var i = 1; winner != null && i < 3; i++) {
+				if(board.board.row[2-i].col[i].mark.length() == 0 || winner != board.board.row[2-i].col[i].mark.@player) {
+					winner = null;
+				}
+			}
+			
+			if(winner != null) {
+				for(var i = 0; i < 3; i++) {
+					board.board.row[2-i].col[i].@highlight = "true";
+				}
+				return winner;
+			}
+			else if(boardFull) {
+				board.board.row.col.@highlight = "true";
+				return "C";
+			}
+			else return null;			
+		}
+	//]]></script>
+	<data name="board">
+		<board xmlns="http://www.livegameengine.com/schemas/games/tictactoe.xsd" turn="X">
+			<row><col/><col/><col/></row>
+			<row><col/><col/><col/></row>
+			<row><col/><col/><col/></row>
+		</board>
+	</data>
+</datamodel>
+
+<state id="initializing">
+	<transition target="waitingForPlayers" />
+</state>
+
+<state id="waitingForPlayers">
+	<transition event="game.playerJoin" cond="game.players.size() == 0">
+		<game:playerJoin role="X"/>
+	</transition>
+	<transition event="game.playerJoin" cond="game.players.size() == 1">
+		<game:playerJoin role="O"/>
+	</transition>
+	<transition event="game.playerJoin" cond="game.players.size() >= 2">
+		<game:error message="Tic Tac Toe can only have up to 2 players" />
+	</transition>
+	
+	<transition event="game.startGame" cond="game.players.size() != 2">
+		<game:error message="Tic Tac Toe must have exactly 2 players before starting" />
+	</transition>
+	<transition event="game.startGame" cond="game.players.size() == 2" target="play" />
+</state>
+
+<state id="play">
+	<transition event="board.click" cond="game.findPlayerByRole(board.board.@turn.toString()).userid != _eventdata.gamens::player">
+		<game:error message="It is not your turn." />
+		<script>
+			log.info("current role: " + board.board.@turn.toString());
+			log.info("current role player: " + game.findPlayerByRole(board.board.@turn.toString()).userid);
+			log.info("_eventdata.player: " + _eventdata.player);
+			log.info("_eventdata.gamens::player: " + _eventdata.gamens::player);
+			log.info("_eventdata: " + _eventdata.toXMLString());
+		</script>
+	</transition>
+
+	<transition event="board.click" cond="parseInt(_eventdata.square.@x) &lt; 0 || parseInt(_eventdata.square.@x) &gt;= 3 || parseInt(_eventdata.square.@y) &lt; 0 || parseInt(_eventdata.square.@y) &gt;= 3">
+		<game:error message="click not on the board" />
+	</transition>
+	
+	<transition event="board.click" cond="board.board.row[parseInt(_eventdata.square.@y)].col[parseInt(_eventdata.square.@x)].mark.length() &gt; 0">
+		<game:error message="that square already has a mark" />
+	</transition>
+	
+	<transition event="board.click" target="check_complete">
+		<script><![CDATA[
+			board.board.row[parseInt(_eventdata.square.@y)].col[parseInt(_eventdata.square.@x)].appendChild(<mark player={board.board.@turn} />);
+			
+		]]></script>
+		<game:sendWatcherEvent event="'placement'">
+			<param name="role" expr="board.board.@turn" />
+			<param name="x" expr="_eventdata.square.@x" />
+			<param name="y" expr="_eventdata.square.@y" />
+		</game:sendWatcherEvent>
+		<script><![CDATA[
+			if(board.board.@turn == "X")
+				board.board.@turn = "O";
+			else
+				board.board.@turn = "X";
+		]]></script>
+	</transition>
+</state>
+
+<state id="check_complete">
+	<transition cond="getWinner() != null" target="complete">
+		<script>//<![CDATA[
+			board.board.@winner = getWinner();
+		//]]></script>
+		<game:completeGame winnerExpr="game.findPlayerByRole(board.board.@winner)" />
+	</transition>
+	<transition cond="getWinner() == null" target="play" />
+</state>
+
+<state id="complete"></state>
+</scxml>

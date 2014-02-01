@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN" "http://www.w3.org/2002/04/xhtml-math-svg/xhtml-math-svg.dtd" [
+	<!ELEMENT view:templates (sxsl:stylesheet) >
+	<!ELEMENT sxsl:stylesheet ANY >
+	<!ATTLIST sxsl:stylesheet 
+		id ID #IMPLIED
+	>
+	<!ELEMENT view:events (view:event) >
+	<!ELEMENT view:event ANY >
+	<!ATTLIST view:event 
+		id ID #IMPLIED
+	>
+	<!ENTITY % head.misc "(script|style|meta|link|object|view:templates|view:events)*" >
+]>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:game="http://www.livegameengine.com/schemas/game.xsd" xmlns:scxml="http://www.w3.org/2005/07/scxml" xmlns:tic="http://www.livegameengine.com/schemas/games/tictactoe.xsd" xmlns:txsl="http://www.w3.org/1999/XSL/Transform#Client" xmlns:view="http://www.livegameengine.com/schemas/view.xsd" xmlns:xalan="http://xml.apache.org/xalan">
+<head>
+<script xmlns:html="http://www.w3.org/1999/xhtml" xmlns:java="http://xml.apache.org/xalan/java" xmlns:sxsl="http://www.w3.org/1999/XSL/Transform" src="/client/0.2/view.js" type="text/javascript"/>
+<script xmlns:html="http://www.w3.org/1999/xhtml" xmlns:java="http://xml.apache.org/xalan/java" xmlns:sxsl="http://www.w3.org/1999/XSL/Transform" type="text/javascript"><![CDATA[
+				View.wireEventHandlers([
+						{ "elementId": "N10028", "templateId": "temp-N10029" },
+						{ "elementId": "N1003E", "templateId": "temp-N1003F" },
+						{ "elementId": "N10054", "templateId": "temp-N10055" },
+						{ "elementId": "N1006B", "templateId": "temp-N1006C" },
+						{ "elementId": "N10081", "templateId": "temp-N10082" },
+						{ "elementId": "N10097", "templateId": "temp-N10098" },
+						{ "elementId": "N100AE", "templateId": "temp-N100AF" },
+						{ "elementId": "N100C4", "templateId": "temp-N100C5" },
+						{ "elementId": "N100DA", "templateId": "temp-N100DB" },
+						{ "elementId": "N100E9", "templateId": "temp-N100EA" },
+						{ "elementId": "N100EE", "templateId": "temp-N100EF" },
+				]);
+			]]></script>
+<title>Live Game Engine - Tic Tac Toe</title>
+<style type="text/css">
+					td { width: 100px; height: 100px; border: solid 1px black; }
+					.highlight { background-color: rgb(50,50,255); }
+				</style>
+<view:templates xmlns:html="http://www.w3.org/1999/xhtml" xmlns:java="http://xml.apache.org/xalan/java" xmlns:sxsl="http://www.w3.org/1999/XSL/Transform">
+<sxsl:stylesheet version="2.0" id="temp-N10029">
+<sxsl:param name="px"/>
+<sxsl:param name="py"/>
+<sxsl:param name="role"/>
+<sxsl:template match="/">
+<if xmlns="http://www.w3.org/1999/XSL/Transform" test="$px == 0 and $py == 0">
+<strong xmlns="http://www.w3.org/1999/xhtml">
+<value-of xmlns="http://www.w3.org/1999/XSL/Transform" select="$role"/>
+</strong>
+</if>
+</sxsl:template>
+<sxsl:template match="*[namespace-uri() = 'http://www.w3.org/1999/XSL/Transform#Client']">
+<sxsl:choose>
+<sxsl:when test="count(ancestor::view:eventHandler) &gt; 1">
+<sxsl:copy>
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:copy>
+</sxsl:when>
+<sxsl:otherwise>
+<sxsl:element namespace="http://www.w3.org/1999/XSL/Transform" name="eventHandler">
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:element>
+</sxsl:otherwise>
+</sxsl:choose>
+</sxsl:template>
+</sxsl:stylesheet>
+<sxsl:stylesheet version="2.0" id="temp-N1003F">
+<sxsl:param name="px"/>
+<sxsl:param name="py"/>
+<sxsl:param name="role"/>
+<sxsl:template match="/">
+<if xmlns="http://www.w3.org/1999/XSL/Transform" test="$px == 1 and $py == 0">
+<strong xmlns="http://www.w3.org/1999/xhtml">
+<value-of xmlns="http://www.w3.org/1999/XSL/Transform" select="$role"/>
+</strong>
+</if>
+</sxsl:template>
+<sxsl:template match="*[namespace-uri() = 'http://www.w3.org/1999/XSL/Transform#Client']">
+<sxsl:choose>
+<sxsl:when test="count(ancestor::view:eventHandler) &gt; 1">
+<sxsl:copy>
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:copy>
+</sxsl:when>
+<sxsl:otherwise>
+<sxsl:element namespace="http://www.w3.org/1999/XSL/Transform" name="eventHandler">
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:element>
+</sxsl:otherwise>
+</sxsl:choose>
+</sxsl:template>
+</sxsl:stylesheet>
+<sxsl:stylesheet version="2.0" id="temp-N10055">
+<sxsl:param name="px"/>
+<sxsl:param name="py"/>
+<sxsl:param name="role"/>
+<sxsl:template match="/">
+<if xmlns="http://www.w3.org/1999/XSL/Transform" test="$px == 2 and $py == 0">
+<strong xmlns="http://www.w3.org/1999/xhtml">
+<value-of xmlns="http://www.w3.org/1999/XSL/Transform" select="$role"/>
+</strong>
+</if>
+</sxsl:template>
+<sxsl:template match="*[namespace-uri() = 'http://www.w3.org/1999/XSL/Transform#Client']">
+<sxsl:choose>
+<sxsl:when test="count(ancestor::view:eventHandler) &gt; 1">
+<sxsl:copy>
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:copy>
+</sxsl:when>
+<sxsl:otherwise>
+<sxsl:element namespace="http://www.w3.org/1999/XSL/Transform" name="eventHandler">
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:element>
+</sxsl:otherwise>
+</sxsl:choose>
+</sxsl:template>
+</sxsl:stylesheet>
+<sxsl:stylesheet version="2.0" id="temp-N1006C">
+<sxsl:param name="px"/>
+<sxsl:param name="py"/>
+<sxsl:param name="role"/>
+<sxsl:template match="/">
+<if xmlns="http://www.w3.org/1999/XSL/Transform" test="$px == 0 and $py == 1">
+<strong xmlns="http://www.w3.org/1999/xhtml">
+<value-of xmlns="http://www.w3.org/1999/XSL/Transform" select="$role"/>
+</strong>
+</if>
+</sxsl:template>
+<sxsl:template match="*[namespace-uri() = 'http://www.w3.org/1999/XSL/Transform#Client']">
+<sxsl:choose>
+<sxsl:when test="count(ancestor::view:eventHandler) &gt; 1">
+<sxsl:copy>
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:copy>
+</sxsl:when>
+<sxsl:otherwise>
+<sxsl:element namespace="http://www.w3.org/1999/XSL/Transform" name="eventHandler">
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:element>
+</sxsl:otherwise>
+</sxsl:choose>
+</sxsl:template>
+</sxsl:stylesheet>
+<sxsl:stylesheet version="2.0" id="temp-N10082">
+<sxsl:param name="px"/>
+<sxsl:param name="py"/>
+<sxsl:param name="role"/>
+<sxsl:template match="/">
+<if xmlns="http://www.w3.org/1999/XSL/Transform" test="$px == 1 and $py == 1">
+<strong xmlns="http://www.w3.org/1999/xhtml">
+<value-of xmlns="http://www.w3.org/1999/XSL/Transform" select="$role"/>
+</strong>
+</if>
+</sxsl:template>
+<sxsl:template match="*[namespace-uri() = 'http://www.w3.org/1999/XSL/Transform#Client']">
+<sxsl:choose>
+<sxsl:when test="count(ancestor::view:eventHandler) &gt; 1">
+<sxsl:copy>
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:copy>
+</sxsl:when>
+<sxsl:otherwise>
+<sxsl:element namespace="http://www.w3.org/1999/XSL/Transform" name="eventHandler">
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:element>
+</sxsl:otherwise>
+</sxsl:choose>
+</sxsl:template>
+</sxsl:stylesheet>
+<sxsl:stylesheet version="2.0" id="temp-N10098">
+<sxsl:param name="px"/>
+<sxsl:param name="py"/>
+<sxsl:param name="role"/>
+<sxsl:template match="/">
+<if xmlns="http://www.w3.org/1999/XSL/Transform" test="$px == 2 and $py == 1">
+<strong xmlns="http://www.w3.org/1999/xhtml">
+<value-of xmlns="http://www.w3.org/1999/XSL/Transform" select="$role"/>
+</strong>
+</if>
+</sxsl:template>
+<sxsl:template match="*[namespace-uri() = 'http://www.w3.org/1999/XSL/Transform#Client']">
+<sxsl:choose>
+<sxsl:when test="count(ancestor::view:eventHandler) &gt; 1">
+<sxsl:copy>
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:copy>
+</sxsl:when>
+<sxsl:otherwise>
+<sxsl:element namespace="http://www.w3.org/1999/XSL/Transform" name="eventHandler">
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:element>
+</sxsl:otherwise>
+</sxsl:choose>
+</sxsl:template>
+</sxsl:stylesheet>
+<sxsl:stylesheet version="2.0" id="temp-N100AF">
+<sxsl:param name="px"/>
+<sxsl:param name="py"/>
+<sxsl:param name="role"/>
+<sxsl:template match="/">
+<if xmlns="http://www.w3.org/1999/XSL/Transform" test="$px == 0 and $py == 2">
+<strong xmlns="http://www.w3.org/1999/xhtml">
+<value-of xmlns="http://www.w3.org/1999/XSL/Transform" select="$role"/>
+</strong>
+</if>
+</sxsl:template>
+<sxsl:template match="*[namespace-uri() = 'http://www.w3.org/1999/XSL/Transform#Client']">
+<sxsl:choose>
+<sxsl:when test="count(ancestor::view:eventHandler) &gt; 1">
+<sxsl:copy>
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:copy>
+</sxsl:when>
+<sxsl:otherwise>
+<sxsl:element namespace="http://www.w3.org/1999/XSL/Transform" name="eventHandler">
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:element>
+</sxsl:otherwise>
+</sxsl:choose>
+</sxsl:template>
+</sxsl:stylesheet>
+<sxsl:stylesheet version="2.0" id="temp-N100C5">
+<sxsl:param name="px"/>
+<sxsl:param name="py"/>
+<sxsl:param name="role"/>
+<sxsl:template match="/">
+<if xmlns="http://www.w3.org/1999/XSL/Transform" test="$px == 1 and $py == 2">
+<strong xmlns="http://www.w3.org/1999/xhtml">
+<value-of xmlns="http://www.w3.org/1999/XSL/Transform" select="$role"/>
+</strong>
+</if>
+</sxsl:template>
+<sxsl:template match="*[namespace-uri() = 'http://www.w3.org/1999/XSL/Transform#Client']">
+<sxsl:choose>
+<sxsl:when test="count(ancestor::view:eventHandler) &gt; 1">
+<sxsl:copy>
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:copy>
+</sxsl:when>
+<sxsl:otherwise>
+<sxsl:element namespace="http://www.w3.org/1999/XSL/Transform" name="eventHandler">
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:element>
+</sxsl:otherwise>
+</sxsl:choose>
+</sxsl:template>
+</sxsl:stylesheet>
+<sxsl:stylesheet version="2.0" id="temp-N100DB">
+<sxsl:param name="px"/>
+<sxsl:param name="py"/>
+<sxsl:param name="role"/>
+<sxsl:template match="/">
+<if xmlns="http://www.w3.org/1999/XSL/Transform" test="$px == 2 and $py == 2">
+<strong xmlns="http://www.w3.org/1999/xhtml">
+<value-of xmlns="http://www.w3.org/1999/XSL/Transform" select="$role"/>
+</strong>
+</if>
+</sxsl:template>
+<sxsl:template match="*[namespace-uri() = 'http://www.w3.org/1999/XSL/Transform#Client']">
+<sxsl:choose>
+<sxsl:when test="count(ancestor::view:eventHandler) &gt; 1">
+<sxsl:copy>
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:copy>
+</sxsl:when>
+<sxsl:otherwise>
+<sxsl:element namespace="http://www.w3.org/1999/XSL/Transform" name="eventHandler">
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:element>
+</sxsl:otherwise>
+</sxsl:choose>
+</sxsl:template>
+</sxsl:stylesheet>
+<sxsl:stylesheet version="2.0" id="temp-N100EA">
+<sxsl:template match="/">
+<li>
+<span id="N100EE"/>
+<value-of xmlns="http://www.w3.org/1999/XSL/Transform" select="decendent-or-self::game:gameUser/game:nickname"/>
+<value-of xmlns="http://www.w3.org/1999/XSL/Transform" select="decendent-or-self::game:gameUser/game:userid"/>
+</li>
+</sxsl:template>
+<sxsl:template match="*[namespace-uri() = 'http://www.w3.org/1999/XSL/Transform#Client']">
+<sxsl:choose>
+<sxsl:when test="count(ancestor::view:eventHandler) &gt; 1">
+<sxsl:copy>
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:copy>
+</sxsl:when>
+<sxsl:otherwise>
+<sxsl:element namespace="http://www.w3.org/1999/XSL/Transform" name="eventHandler">
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:element>
+</sxsl:otherwise>
+</sxsl:choose>
+</sxsl:template>
+</sxsl:stylesheet>
+<sxsl:stylesheet version="2.0" id="temp-N100EF">
+<sxsl:param name="connected"/>
+<sxsl:param name="player"/>
+<sxsl:template match="/">
+<txsl:if test="$player = ''">
+<strong>
+<txsl:choose>
+<txsl:when test="$connected = 'true'">connected</txsl:when>
+<txsl:otherwise>disconnected</txsl:otherwise>
+</txsl:choose>
+</strong>
+</txsl:if>
+</sxsl:template>
+<sxsl:template match="*[namespace-uri() = 'http://www.w3.org/1999/XSL/Transform#Client']">
+<sxsl:choose>
+<sxsl:when test="count(ancestor::view:eventHandler) &gt; 1">
+<sxsl:copy>
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:copy>
+</sxsl:when>
+<sxsl:otherwise>
+<sxsl:element namespace="http://www.w3.org/1999/XSL/Transform" name="eventHandler">
+<sxsl:apply-templates select="@*|*|text()"/>
+</sxsl:element>
+</sxsl:otherwise>
+</sxsl:choose>
+</sxsl:template>
+</sxsl:stylesheet>
+</view:templates>
+<view:events xmlns:html="http://www.w3.org/1999/xhtml" xmlns:java="http://xml.apache.org/xalan/java" xmlns:sxsl="http://www.w3.org/1999/XSL/Transform">
+<view:event id="N10016" gameEvent="start" on="click"/>
+<view:event id="N1001C" gameEvent="join" on="click"/>
+<view:event id="N10022" endpointEvent="click" on="click">
+<tic:square x="0" y="0"/>
+</view:event>
+<view:event id="N10038" endpointEvent="click" on="click">
+<tic:square x="1" y="0"/>
+</view:event>
+<view:event id="N1004E" endpointEvent="click" on="click">
+<tic:square x="2" y="0"/>
+</view:event>
+<view:event id="N10065" endpointEvent="click" on="click">
+<tic:square x="0" y="1"/>
+</view:event>
+<view:event id="N1007B" endpointEvent="click" on="click">
+<tic:square x="1" y="1"/>
+</view:event>
+<view:event id="N10091" endpointEvent="click" on="click">
+<tic:square x="2" y="1"/>
+</view:event>
+<view:event id="N100A8" endpointEvent="click" on="click">
+<tic:square x="0" y="2"/>
+</view:event>
+<view:event id="N100BE" endpointEvent="click" on="click">
+<tic:square x="1" y="2"/>
+</view:event>
+<view:event id="N100D4" endpointEvent="click" on="click">
+<tic:square x="2" y="2"/>
+</view:event>
+</view:events>
+</head>
+<body>
+<div>
+<input onclick="View.getInstance().fireEvent(this, 'N10016')" type="button" value="Start"/>
+<input onclick="View.getInstance().fireEvent(this, 'N1001C')" type="button" value="Join"/>
+</div>
+<table>
+<tr>
+<td onclick="View.getInstance().fireEvent(this, 'N10022')">
+<span id="N10028"/>
+</td>
+<td onclick="View.getInstance().fireEvent(this, 'N10038')">
+<span id="N1003E"/>
+</td>
+<td onclick="View.getInstance().fireEvent(this, 'N1004E')">
+<span id="N10054"/>
+</td>
+</tr>
+<tr>
+<td onclick="View.getInstance().fireEvent(this, 'N10065')">
+<span id="N1006B"/>
+</td>
+<td onclick="View.getInstance().fireEvent(this, 'N1007B')">
+<span id="N10081"/>
+</td>
+<td onclick="View.getInstance().fireEvent(this, 'N10091')">
+<span id="N10097"/>
+</td>
+</tr>
+<tr>
+<td onclick="View.getInstance().fireEvent(this, 'N100A8')">
+<span id="N100AE"/>
+</td>
+<td onclick="View.getInstance().fireEvent(this, 'N100BE')">
+<span id="N100C4"/>
+</td>
+<td onclick="View.getInstance().fireEvent(this, 'N100D4')">
+<span id="N100DA"/>
+</td>
+</tr>
+</table>
+<ul id="N100E9"/>
+</body>
+</html>
