@@ -15,6 +15,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.jdo.PersistenceManager;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -119,6 +122,9 @@ public class GameServlet extends HttpServlet {
 			
 			OutputStream responseStream = resp.getOutputStream();
 			StreamResult responseResult = new StreamResult(responseStream);
+			
+
+			ServletContext cxt = req.getSession().getServletContext();
 						
 			
 			if(m.group(2) == null) {
@@ -131,6 +137,8 @@ public class GameServlet extends HttpServlet {
 				
 				GameSource s = new GameSource(gs);					
 				Transformer gametrans = new GameTransformer(gu);
+				
+				gametrans.setOutputProperty(GameTransformer.PROPERTY_SERVLET_CONTEXT_PATH, cxt.getRealPath(""));
 
 				try {
 					gametrans.transform(s, responseResult);

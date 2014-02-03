@@ -2,6 +2,7 @@ package com.livegameengine.web;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidParameterException;
@@ -49,13 +50,14 @@ import com.livegameengine.model.NameValuePair;
 import com.livegameengine.util.Util;
 
 public class GameTransformer extends Transformer {
+	public static String PROPERTY_SERVLET_CONTEXT_PATH = "game.servlet_context_path";
 	public static String PROPERTY_OUTPUT_TYPE = "game.output_type";
 	public static String PROPERTY_OUTPUT_TYPE_VIEW = "View";
 	public static String PROPERTY_OUTPUT_TYPE_RAW = "Raw";
 	public static String PROPERTY_OUTPUT_TYPE_DATA = "Data";
 		
 	private static Config config = Config.getInstance();
-	
+		
 	Log log = LogFactory.getLog(GameTransformer.class);
 	
 	public enum OutputType {
@@ -65,6 +67,7 @@ public class GameTransformer extends Transformer {
 	private Game game_ = null;
 	private GameUser gameUser_ = null;
 	private OutputType outputType_ = OutputType.View;
+	private String servlet_context_path = "";
 	
 	Map<String,Object> params_ = new HashMap<String,Object>();
 	Properties props_ = new Properties();
@@ -191,12 +194,13 @@ public class GameTransformer extends Transformer {
 		Result res1 = new StreamResult(bos);
 				
 		Source frontEndSource = new StreamSource(GameTransformer.class.getResourceAsStream("/pilgrims_view.xslt"));
+		//Source frontEndSource = new StreamSource(GameTransformer.class.getResourceAsStream("/copy.xslt"));
 		/*
 		ByteArrayInputStream bis = new ByteArrayInputStream(gt.getFrontEnd());
 		Source frontEndSource = new StreamSource(bis);
 		*/
 
-		String viewResourceName = String.format("/%s/game_view.xslt", gt.getClientVersion());
+		String viewResourceName = String.format("%s/client/%s/game_view.xslt", servlet_context_path, gt.getClientVersion());
 				
 		Transformer frontendTrans = config.newTransformer(frontEndSource);
 		frontendTrans.setOutputProperty(OutputKeys.METHOD, "xml");
@@ -248,8 +252,12 @@ public class GameTransformer extends Transformer {
 			frontendTrans.transform(new DOMSource(dres1.getNode()), dres2);
 			
 			//log.info("content: " + bos.toString());
-			
-			config.transformFromResource(viewResourceName, new DOMSource(dres2.getNode()), outputTarget, params);
+			try {
+				config.transformFromResource(viewResourceName, new DOMSource(dres2.getNode()), outputTarget, params);
+			}
+			catch(FileNotFoundException e) {
+				throw new TransformerException(e);
+			}
 			
 			break;
 		}
@@ -308,6 +316,9 @@ public class GameTransformer extends Transformer {
 			catch(Exception e) {
 				throw new IllegalArgumentException("value not of type OutputType");
 			}
+		}
+		else if(key.equals(PROPERTY_SERVLET_CONTEXT_PATH)) {
+			this.servlet_context_path = value;
 		}
 		else {
 			props_.put(key, value);

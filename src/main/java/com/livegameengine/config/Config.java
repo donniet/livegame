@@ -3,6 +3,7 @@ package com.livegameengine.config;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -459,14 +460,15 @@ public class Config implements NamespaceContext {
 	
 
 	public void transformFromResource(String resourceUrl, Source source, Result result)  
-			throws TransformerConfigurationException, TransformerException {
+			throws TransformerConfigurationException, TransformerException, FileNotFoundException {
 		this.transformFromResource(resourceUrl, source, result, null);
 	}
 	
 	
 	public void transformFromResource(String resourceUrl, Source source, Result result, Map<String, Object> params) 
-			throws TransformerConfigurationException, TransformerException {
-		InputStream resource = Config.class.getResourceAsStream(resourceUrl);
+			throws TransformerConfigurationException, TransformerException, FileNotFoundException {
+		//InputStream resource = Config.class.getResourceAsStream(resourceUrl);
+		FileInputStream resource = new FileInputStream(resourceUrl);
 		
 		Transformer trans = transformerFactory_.newTransformer(new StreamSource(resource));
 		
