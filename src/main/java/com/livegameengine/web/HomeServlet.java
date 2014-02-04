@@ -14,15 +14,19 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.livegameengine.model.GameType;
 import com.livegameengine.persist.PMF;
 
-public class HomeServlet extends HttpServlet {
+@Controller
+public class HomeServlet {
 	private Log log = LogFactory.getLog(HomeServlet.class);
 	
+	@RequestMapping("/")
 	public void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException {
 		UserService userService = UserServiceFactory.getUserService();

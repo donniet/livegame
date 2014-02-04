@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.jdo.PersistenceManager;
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -38,7 +39,14 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.ServletConfigAware;
+import org.springframework.web.context.ServletContextAware;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.Node;
@@ -68,308 +76,264 @@ import com.livegameengine.util.Util;
 import com.sun.org.apache.xerces.internal.dom.DocumentTypeImpl;
 import com.sun.xml.internal.fastinfoset.stax.util.StAXParserWrapper;
 
-public class GameServlet extends HttpServlet {
+@Controller
+@RequestMapping("/game")
+public class GameServlet implements ServletContextAware {
 	Log log = LogFactory.getLog(GameServlet.class);
-	Config config = Config.getInstance();
+	@Autowired Config config;
+	ServletContext cxt = null;
 	
-	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		handleRequest(req, resp);
-	}
-	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		handleRequest(req, resp);
-	}
-
-	public void handleRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	@RequestMapping("/-/{gameId}")
+	public void doGetGame(@PathVariable String gameId, HttpServletResponse resp) throws IOException, GameLoadException, XMLStreamException, TransformerException {
+		Game g = Game.findGameByKey(KeyFactory.stringToKey(gameId));
+		GameState gs = g.getMostRecentState();
 		UserService userService = UserServiceFactory.getUserService();
 		User u = userService.getCurrentUser();
-		GameUser gu = GameUser.findOrCreateGameUserByUser(u);		
+		GameUser gu = GameUser.findOrCreateGameUserByUser(u);
 		
-		Pattern p = Pattern.compile("/-/([^/]+)/(meta|data|raw_view|join|start|addListeners|message|(event/([^/]+)))?");
+		resp.setContentType("application/xhtml+xml");
 		
-		final Matcher m = p.matcher(req.getPathInfo());
+		GameSource s = new GameSource(gs);					
+		Transformer gametrans = new GameTransformer(gu);
 		
-		//log.info("path info: " + req.getPathInfo());
+		gametrans.setOutputProperty(GameTransformer.PROPERTY_SERVLET_CONTEXT_PATH, cxt.getRealPath(""));
+
+		gametrans.transform(s, new StreamResult(resp.getOutputStream()));
+	}
+	
+	@RequestMapping("/-/{gameId}/meta")
+	public void doGetMeta(@PathVariable String gameId, HttpServletResponse resp) throws IOException, GameLoadException, XMLStreamException {
+		resp.setContentType("text/xml");		
+		OutputStream responseStream = resp.getOutputStream();	
 		
-		if(m != null && m.matches()) {
-			Game g;
-			try {
-				g = Game.findGameByKey(KeyFactory.stringToKey(m.group(1)));
-			} catch (GameLoadException e1) {
-				g = null;
-			}
-			
-			if(g == null) {
-				resp.setStatus(404);
-				resp.setContentType("text/plain");
-				resp.getWriter().write("game not found: " + m.group(1));
-				return;
-			}
-			
-			GameState gs = g.getMostRecentState();
-			
-			if(gs == null) {
-				resp.setStatus(404);
-				resp.setContentType("text/plain");
-				resp.getWriter().write("game has no recent state: " + m.group(1));
-				return;				
-			}
-			
-			Document doc = null;
-			Document doc1 = null;
-			
-			doc = config.newXmlDocument();
-			doc1 = config.newXmlDocument();
-			
-			OutputStream responseStream = resp.getOutputStream();
-			StreamResult responseResult = new StreamResult(responseStream);
-			
+		Game g = Game.findGameByKey(KeyFactory.stringToKey(gameId));
+		
+		XMLOutputFactory factory = XMLOutputFactory.newFactory();
+		XMLStreamWriter writer = null;
+		
+		writer = factory.createXMLStreamWriter(responseStream, config.getEncoding());
+		writer.setDefaultNamespace(config.getGameEngineNamespace());
+		
+		
+		writer.writeStartDocument();
+		
+		g.serializeToXml("game", writer);
+		writer.writeEndDocument();
+		writer.flush();
+	}
+	
+	@RequestMapping("/-/{gameId}/data")
+	public void doGetData(@PathVariable String gameId, HttpServletResponse resp) throws IOException, GameLoadException, TransformerException {
+		resp.setContentType("text/xml");
 
-			ServletContext cxt = req.getSession().getServletContext();
-						
-			
-			if(m.group(2) == null) {
-				if(!req.getMethod().equals("GET")) {
-					resp.setStatus(405);
-					return;
-				}
-				
-				resp.setContentType("application/xhtml+xml");
-				
-				GameSource s = new GameSource(gs);					
-				Transformer gametrans = new GameTransformer(gu);
-				
-				gametrans.setOutputProperty(GameTransformer.PROPERTY_SERVLET_CONTEXT_PATH, cxt.getRealPath(""));
+		Game g = Game.findGameByKey(KeyFactory.stringToKey(gameId));
+		GameState gs = g.getMostRecentState();
+		UserService userService = UserServiceFactory.getUserService();
+		User u = userService.getCurrentUser();
+		GameUser gu = GameUser.findOrCreateGameUserByUser(u);
+		
+		GameSource s = new GameSource(gs);
+		Transformer gametrans = new GameTransformer(gu);
+		
+		gametrans.setOutputProperty(GameTransformer.PROPERTY_OUTPUT_TYPE, "Data");
+		gametrans.setOutputProperty(GameTransformer.PROPERTY_SERVLET_CONTEXT_PATH, cxt.getRealPath(""));
+		
+		gametrans.transform(s, new StreamResult(resp.getOutputStream()));
+	}
+	
+	@RequestMapping("/-/{gameId}/raw_view")
+	public void doGetRawView(@PathVariable String gameId, HttpServletResponse resp)  throws IOException, GameLoadException, TransformerException {
+		resp.setContentType("text/xml");
 
-				try {
-					gametrans.transform(s, responseResult);
-				} catch (TransformerException e) {
-					throw new IOException(e);
-				}
-			}
-			else if(m.group(2).equals("raw_view")) {
-				if(req.getMethod().equals("GET")) {
-					resp.setContentType("text/xml");
-					
-					GameSource s = new GameSource(gs);
-					Transformer gametrans = new GameTransformer(gu);
-					
-					gametrans.setOutputProperty(GameTransformer.PROPERTY_OUTPUT_TYPE, "Raw");
+		UserService userService = UserServiceFactory.getUserService();
+		User u = userService.getCurrentUser();
+		GameUser gu = GameUser.findOrCreateGameUserByUser(u);
+		
+		Game g = Game.findGameByKey(KeyFactory.stringToKey(gameId));
+		GameState gs = g.getMostRecentState();
+		
+		GameSource s = new GameSource(gs);
+		Transformer gametrans = new GameTransformer(gu);
+		
+		gametrans.setOutputProperty(GameTransformer.PROPERTY_OUTPUT_TYPE, "Raw");
+		gametrans.setOutputProperty(GameTransformer.PROPERTY_SERVLET_CONTEXT_PATH, cxt.getRealPath(""));
 
-					try {
-						gametrans.transform(s, responseResult);
-					} catch (TransformerException e) {
-						throw new IOException(e);
-					}
-				}
-				else {
-					resp.setStatus(405);
-				}
-			}
-			else if(m.group(2).equals("data")) {
-				if(req.getMethod().equals("GET")) {
-					resp.setContentType("text/xml");
-					
-					GameSource s = new GameSource(gs);
-					Transformer gametrans = new GameTransformer(gu);
-					
-					gametrans.setOutputProperty(GameTransformer.PROPERTY_OUTPUT_TYPE, "Data");
-					
-					try {
-						gametrans.transform(s, responseResult);
-					} catch (TransformerException e) {
-						throw new IOException(e);
-					}
-				}
-				else {
-					resp.setStatus(405);
-				}
-			}
-			else if(m.group(2).equals("meta")) {
-				if(req.getMethod().equals("GET")) {
-					resp.setContentType("text/xml");			
-					
-					
-					XMLOutputFactory factory = XMLOutputFactory.newFactory();
-					XMLStreamWriter writer = null;
-					try {
-						writer = factory.createXMLStreamWriter(responseStream, config.getEncoding());
-						writer.setDefaultNamespace(config.getGameEngineNamespace());
-						
-						
-						writer.writeStartDocument();
-						
-						g.serializeToXml("game", writer);
-						writer.writeEndDocument();
-						writer.flush();
-						
-					} catch (XMLStreamException e) {
-						resp.setStatus(500);
-						e.printStackTrace();
-					}						
-				}
-				else {
-					resp.setStatus(405);
-				}
-			}
-			else if(m.group(2).equals("addListeners")) {
-				/*
-				Document d = config.newXmlDocument();
-				Transformer t = null;
-				try {
-					t = config.newTransformer();
-					t.transform(new StreamSource(req.getInputStream()), new DOMResult(d));
-				} catch (TransformerConfigurationException e) {
-					resp.setStatus(500);
-					e.printStackTrace();
-				} catch (TransformerException e) {
-					// invalid xml input
-					resp.setStatus(400);
-					e.printStackTrace();
-				}
-				*/
-				
-				Set<String> listeners = parseAddListenersRequest(req);
-				
-				Watcher w = Watcher.findWatcherByGameAndGameUser(g, gu);
-				
-				if(w != null) {
-					w.addListners(listeners);
-				}
-			}
-			else if(m.group(2).equals("message")) {
-				if(!req.getMethod().equals("GET")) {
-					resp.setStatus(405);
-					return;
-				}
-				
-				String since = req.getParameter("since");
-				
-				if(since == null) {
-					resp.setStatus(400);
-					return;
-				}
-				
-				Date s;
-				try {
-					s = config.getDateFormat().parse(since);
-				} catch (ParseException e) {
-					resp.setStatus(400);
-					return;
-				}
-				
-				//log.info(String.format("since: %s, parsed: %s", since, config.getDateFormat().format(s)));
-
-				List<ClientMessage> messages = ClientMessage.findClientMessagesSince(g, s);
-				
-				if(messages == null || messages.size() == 0) {
-					resp.setStatus(204);
-					return;
-				}
-				
-				ClientMessageSource so = new ClientMessageSource(messages);
-				Transformer gametrans = new GameTransformer(gu);
-				
-				gametrans.setOutputProperty(GameTransformer.PROPERTY_OUTPUT_TYPE, "View");
-				
-				
-				try {
-					gametrans.transform(so, responseResult);
-				} catch (TransformerException e) {
-					throw new IOException(e);
-				}
-				
-			}
-			else if(m.group(2).equals("start") || m.group(2).equals("join") || m.group(2).startsWith("event/")) {
-				if(!req.getMethod().equals("POST")) {
-					resp.setStatus(405);
-					resp.addHeader("Allow", "POST");
-					return;
-				}
-				
-				if(u == null) {
-					resp.setStatus(403);
-					return;
-				}
-				
-				boolean success = true;
-				
-				if(m.group(2).equals("start")) {
-					success = g.sendStartGameRequest(u);
-				}
-				else if(m.group(2).equals("join")) {
-					success = g.sendPlayerJoinRequest(u);
-				}
-				else if(m.group(2).startsWith("event/")) {
-					String eventName = "board." + m.group(4);
-					
-					Node data = doc.createElementNS(config.getGameEngineNamespace(), "data");
-					
-					Node player = doc.createElementNS(config.getGameEngineNamespace(), "player");
-					player.appendChild(doc.createTextNode(gu.getHashedUserId()));
-					
-					data.appendChild(player);
-					doc.appendChild(data);
-					
-					DOMResult dr = new DOMResult(data);
-									
-					if(req.getContentLength() > 0) {
-						try {
-							Transformer trans = config.newTransformer();
-							
-							trans.transform(new StreamSource(req.getInputStream()), dr);
-						} catch (TransformerException e) {
-							// ignore error
-						}
-					}
-					
-					success = g.triggerEvent(eventName, data);
-				}
-					
-				if(!success) {
-					String errorMessage = "";
-					if(!g.isError()) {
-						// there was no official error, the event is simply not valid
-						errorMessage = "Action not valid in the current game state";
-					}
-					else {
-						errorMessage = g.getErrorMessage();
-					}
-					
-					Node error = doc1.createElementNS(config.getGameEngineNamespace(), "error");
-					error.appendChild(doc1.createTextNode(errorMessage));
-					doc1.appendChild(error);
-											
-					resp.setContentType("application/xml");
-					resp.setStatus(400);
-					Transformer trans;
-					try {
-						trans = config.newTransformer();
-						trans.transform(new DOMSource(doc1), responseResult);
-					} catch (TransformerConfigurationException e) {
-						resp.setStatus(500);
-						e.printStackTrace();
-					} catch (TransformerException e) {
-						resp.setStatus(500);
-						e.printStackTrace();
-					}
-					
-					g.clearError();
-					
-				}
-				else {
-					resp.setStatus(200);
-				}
-			}
-			else {
-				resp.setStatus(404);
-				resp.setContentType("text/plain");
-				//resp.getWriter().write("unknown url");
-			}
+		gametrans.transform(s, new StreamResult(resp.getOutputStream()));
+	}
+	
+	private void handleActionError(Game g, HttpServletResponse resp) throws IOException, TransformerException {
+		Document doc1 = config.newXmlDocument();
+		
+		String errorMessage = "";
+		if(!g.isError()) {
+			// there was no official error, the event is simply not valid
+			errorMessage = "Action not valid in the current game state";
 		}
 		else {
-			resp.setStatus(404);
-			resp.getWriter().write("game not found.");
+			errorMessage = g.getErrorMessage();
 		}
+		
+		Node error = doc1.createElementNS(config.getGameEngineNamespace(), "error");
+		error.appendChild(doc1.createTextNode(errorMessage));
+		doc1.appendChild(error);
+								
+		resp.setContentType("application/xml");
+		resp.setStatus(400);
+		Transformer trans;
+		trans = config.newTransformer();
+		trans.transform(new DOMSource(doc1), new StreamResult(resp.getOutputStream()));
+		
+		g.clearError();
+	}
+	
+	@RequestMapping(value="/-/{gameId}/join", method=RequestMethod.POST)
+	public void doPostJoin(@PathVariable String gameId, HttpServletResponse resp)   throws IOException, GameLoadException, TransformerException {
+		UserService userService = UserServiceFactory.getUserService();
+		User u = userService.getCurrentUser();
+		Game g = Game.findGameByKey(KeyFactory.stringToKey(gameId));
+		
+		boolean success = g.sendPlayerJoinRequest(u);
+		
+		if(!success) {
+			handleActionError(g, resp);			
+		}
+		else {
+			resp.setStatus(200);
+		}
+	}
+	
+	@RequestMapping(value="/-/{gameId}/start", method=RequestMethod.POST)
+	public void doPostStart(@PathVariable String gameId, HttpServletResponse resp)   throws IOException, GameLoadException, TransformerException {
+		UserService userService = UserServiceFactory.getUserService();
+		User u = userService.getCurrentUser();
+		Game g = Game.findGameByKey(KeyFactory.stringToKey(gameId));
+		
+		boolean success = g.sendStartGameRequest(u);
+		
+		if(!success) {
+			handleActionError(g, resp);			
+		}
+		else {
+			resp.setStatus(200);
+		}
+	}
+	
+	@RequestMapping(value="/-/{gameId}/event/{event}", method=RequestMethod.POST)
+	public void doPostEvent(
+			@PathVariable String gameId, 
+			@PathVariable String event, 
+			HttpServletRequest req, 
+			HttpServletResponse resp)  
+					throws IOException, GameLoadException, TransformerException {
+		
+		String eventName = "board." + event;
+		Document doc = config.newXmlDocument();
+		
+		UserService userService = UserServiceFactory.getUserService();
+		User u = userService.getCurrentUser();
+		GameUser gu = GameUser.findOrCreateGameUserByUser(u);
+		Game g = Game.findGameByKey(KeyFactory.stringToKey(gameId));
+		
+		
+		Node data = doc.createElementNS(config.getGameEngineNamespace(), "data");
+		
+		Node player = doc.createElementNS(config.getGameEngineNamespace(), "player");
+		player.appendChild(doc.createTextNode(gu.getHashedUserId()));
+		
+		data.appendChild(player);
+		doc.appendChild(data);
+		
+		DOMResult dr = new DOMResult(data);
+						
+		if(req.getContentLength() > 0) {
+			try {
+				Transformer trans = config.newTransformer();
+				
+				trans.transform(new StreamSource(req.getInputStream()), dr);
+			} catch (TransformerException e) {
+				// ignore error
+			}
+		}
+		
+		if(!g.triggerEvent(eventName, data)) {
+			handleActionError(g, resp);
+		}
+		else {
+			resp.setStatus(200);
+		}
+	}
+	
+	@RequestMapping(value="/-/{gameId}/addListener", method=RequestMethod.POST)
+	public void doPostAddListener(@PathVariable String gameId, HttpServletRequest req, HttpServletResponse resp)
+			throws IOException, GameLoadException, TransformerException {
+		
+		UserService userService = UserServiceFactory.getUserService();
+		User u = userService.getCurrentUser();
+		GameUser gu = GameUser.findOrCreateGameUserByUser(u);
+		Game g = Game.findGameByKey(KeyFactory.stringToKey(gameId));
+		
+		
+		/*
+		Document d = config.newXmlDocument();
+		Transformer t = null;
+		try {
+			t = config.newTransformer();
+			t.transform(new StreamSource(req.getInputStream()), new DOMResult(d));
+		} catch (TransformerConfigurationException e) {
+			resp.setStatus(500);
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			// invalid xml input
+			resp.setStatus(400);
+			e.printStackTrace();
+		}
+		*/
+		
+		Set<String> listeners = parseAddListenersRequest(req);
+		
+		Watcher w = Watcher.findWatcherByGameAndGameUser(g, gu);
+		
+		if(w != null) {
+			w.addListners(listeners);
+		}		
+	}
+	
+	@RequestMapping(value="/-/{gameId}/message", method=RequestMethod.GET)
+	public void doGetMessage(@PathVariable String gameId, @RequestParam(value="since", required=true) String since, HttpServletResponse resp)
+			throws IOException, GameLoadException, TransformerException {
+
+		StreamResult responseResult = new StreamResult(resp.getOutputStream());
+		
+		UserService userService = UserServiceFactory.getUserService();
+		User u = userService.getCurrentUser();
+		GameUser gu = GameUser.findOrCreateGameUserByUser(u);
+		Game g = Game.findGameByKey(KeyFactory.stringToKey(gameId));
+		
+		
+		Date s;
+		try {
+			s = config.getDateFormat().parse(since);
+		} catch (ParseException e) {
+			resp.setStatus(400);
+			return;
+		}
+		
+		//log.info(String.format("since: %s, parsed: %s", since, config.getDateFormat().format(s)));
+
+		List<ClientMessage> messages = ClientMessage.findClientMessagesSince(g, s);
+		
+		if(messages == null || messages.size() == 0) {
+			resp.setStatus(204);
+			return;
+		}
+		
+		ClientMessageSource so = new ClientMessageSource(messages);
+		Transformer gametrans = new GameTransformer(gu);
+		
+		gametrans.setOutputProperty(GameTransformer.PROPERTY_OUTPUT_TYPE, "View");
+		gametrans.setOutputProperty(GameTransformer.PROPERTY_SERVLET_CONTEXT_PATH, cxt.getRealPath(""));
+
+		gametrans.transform(so, responseResult);
 	}
 	
 	private Set<String> parseAddListenersRequest(HttpServletRequest req) throws IOException {
@@ -382,5 +346,9 @@ public class GameServlet extends HttpServlet {
 		
 		return alp.getEvents();
 		
+	}
+	@Override
+	public void setServletContext(ServletContext cxt) {
+		this.cxt = cxt;		
 	}
 }

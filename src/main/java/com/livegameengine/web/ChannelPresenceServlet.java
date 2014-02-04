@@ -13,6 +13,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
 import com.google.appengine.api.channel.ChannelPresence;
 import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
@@ -27,7 +31,11 @@ import com.livegameengine.model.Player;
 import com.livegameengine.model.Watcher;
 import com.livegameengine.persist.PMF;
 
+
+@Controller
 public class ChannelPresenceServlet extends HttpServlet {
+	
+	@RequestMapping(value="/_ah/channel/*",method=RequestMethod.POST)	
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		// In the handler for _ah/channel/connected/
 		ChannelService channelService = ChannelServiceFactory.getChannelService();
