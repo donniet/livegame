@@ -11,7 +11,7 @@
 	xmlns:math="http://exslt.org/math"
 	xmlns:fn="http://www.w3.org/2005/xpath-functions"
 	xmlns:svg="http://www.w3.org/2000/svg"
-	exclude-result-prefixes="xsl xalan fn scxml game ex">
+	exclude-result-prefixes="xsl xalan fn scxml game ex math">
 	
 	<xsl:param name="game-meta-uri" select="'game://current/meta'" />
 	<xsl:variable name="meta-doc" select="document($game-meta-uri)" />
@@ -517,9 +517,40 @@ function enableBoardPanZoom(board, boardContainer) {
 						<view:eventHandlerPlaceholder event="board.resourcesDistributed" mode="replace" />
 					</div>
 				</div>
+				
+				<div id="tradeDiv">
+					<xsl:attribute name="style">
+						<xsl:choose>
+							<xsl:when test="count(pil:trade) &gt; 0">height:100px;</xsl:when>
+							<xsl:otherwise>height:0;</xsl:otherwise>
+						</xsl:choose>
+					</xsl:attribute>
+					
+					<view:eventHandlerPlaceholder event="board.tradeStarted" mode="attribute">
+						<view:attribute name="style">height:100px;</view:attribute>
+					</view:eventHandlerPlaceholder>
+					<view:eventHandlerPlaceholder event="board.tradeEnded" mode="attribute">
+						<view:attribute name="style">height:0;</view:attribute>
+					</view:eventHandlerPlaceholder>
+					
+					<xsl:apply-templates select="pil:trade" />
+					<view:eventHandlerPlaceholder event="board.tradeStarted" mode="replace" />
+					<view:eventHandlerPlaceholder event="board.tradeChange" mode="replace" />
+				</div>	
 			</body>
+			
 		</html>
 	</xsl:template>
+	
+	<xsl:template match="/game:message[game:event = 'board.tradeStarted' or game:event = 'board.tradeChange']">
+		<xsl:apply-templates select="game:content/pil:trade" />
+	</xsl:template>
+	 
+	<xsl:template match="pil:trade">
+		<xsl:apply-templates select="pil:offer" />
+		<xsl:apply-templates select="pil:bankOffer" />
+	</xsl:template>
+	
 
 	<xsl:template match="game:validEvents/game:event[text() = 'game.playerJoin']">
 		<input value="Join" type="button">
@@ -571,6 +602,10 @@ function enableBoardPanZoom(board, boardContainer) {
 		</ul>
 	</xsl:template>
 	
+	<xsl:template match="/">
+	    <xsl:apply-templates />
+	</xsl:template>
+	
 	<xsl:template match="pil:player">
 		<xsl:variable name="color" select="pil:color" />
 		
@@ -597,11 +632,40 @@ function enableBoardPanZoom(board, boardContainer) {
 		</li>
 	</xsl:template>
 	
+	<xsl:template match="pil:offer">
+		<xsl:variable name="col" select="@color" />
+		<div>
+			<xsl:attribute name="class">offer offer-<xsl:value-of select="1+count(../pil:players/pil:player[pil:color = $col]/preceding-sibling::pil:player)" /></xsl:attribute>
+			
+			<ul class="resource-list">
+				<xsl:apply-templates select="pil:resource">
+					<xsl:sort select="@type" />
+				</xsl:apply-templates>
+			</ul>
+		</div>
+	</xsl:template>
+	
+	<xsl:template match="pil:resource">
+		<li class="resource resource-{@type}">
+			<view:event on="click">
+				<xsl:attribute name="event">
+					<xsl:choose>
+						<xsl:when test="local-name(..) = 'offer'">offerResourceClick</xsl:when>
+						<xsl:otherwise>resourceClick</xsl:otherwise>
+					</xsl:choose>
+				</xsl:attribute>
+				
+				<pil:resource type="{@type}" />
+			</view:event>
+			
+			<span><xsl:value-of select="@count" /></span>
+		</li>
+	</xsl:template>
+	
 	<xsl:template match="pil:resources">
-		<xsl:for-each select="pil:resource">
-			<xsl:sort-by select="@type" />
-			<li class="resource resource-{@type}"><span><xsl:value-of select="@count" /></span></li>
-		</xsl:for-each>
+		<xsl:apply-templates select="pil:resource">
+			<xsl:sort select="@type" />
+		</xsl:apply-templates>
 	</xsl:template>
 	
 	<xsl:template match="/game:message[game:event = 'game.playerJoin' or game:event = 'board.resourcesDistributed']">
@@ -801,10 +865,17 @@ function enableBoardPanZoom(board, boardContainer) {
 		
 		<svg:line x1="{$cx1 * 0.875 + $cx3 * 0.125}" y1="{$cy1 * 0.875 + $cy3 * 0.125}" x2="{$cx3}" y2="{$cy3}" />
 		<svg:line x1="{$cx2 * 0.875 + $cx3 * 0.125}" y1="{$cy2 * 0.875 + $cy3 * 0.125}" x2="{$cx3}" y2="{$cy3}" />
-		<svg:circle class="port-marker" cx="{$cx3}" cy="{$cy3}" r="{$edgeLength * 0.2}" />
+		<svg:circle class="port-mark" cx="{$cx3}" cy="{$cy3}" r="{$edgeLength * 0.2}" />
 		<svg:text transform="matrix({($cx2 - $cx1) div $r},{($cy2 - $cy1) div $r},{-($cy2 - $cy1) div $r},{($cx2 - $cx1) div $r}, {$cx3}, {$cy3})">
 			<xsl:value-of select="concat(@tradeIn,':',@tradeOut)" />
 		</svg:text>
+		
+		<svg:circle class="port-hit-area" cx="{$cx3}" cy="{$cy3}" r="{$edgeLength * 0.3}">
+			<view:event on="click" event="portClick">
+				<pil:port x1="{$x1}" y1="{$y1}" x2="{$x2}" y2="{$y2}" />
+			</view:event>
+		</svg:circle>
+		
 	</xsl:template>
 		
 	<xsl:template match="pil:verteces">
@@ -1162,13 +1233,21 @@ function enableBoardPanZoom(board, boardContainer) {
 		    stroke-width:1;
 		}
 		
+		.port-hit-area {
+			fill:#00FF00;
+			opacity:0;
+			stroke:none;
+		}
+		.port-hit-area:hover {
+			opacity:0.5;
+		}
 		.port-anchor {
 			stroke: #000000;
 			stroke-dasharray: 3,2;
 			stroke-width: 2px;
 			fill: none;
 		}
-		.port-marker circle {
+		.port-marker circle.port-mark {
 			stroke: #000000;
 			stroke-dasharray:none;
 			stroke-width: 2px;
@@ -1189,26 +1268,26 @@ function enableBoardPanZoom(board, boardContainer) {
 		}
 		
 		
-		.port-Wool circle {
+		.port-Wool circle.port-mark {
 		    fill: #BFE882;
 		}
 		
-		.port-Wheat circle, .port-Grain circle {
+		.port-Wheat circle.port-mark, .port-Grain circle.port-mark {
 		    fill: #FFEF4F;
 		}
 		
-		.port-Wood circle {
+		.port-Wood circle.port-mark {
 		    fill: #00932C;
 		}
 		
-		.port-Ore circle {
+		.port-Ore circle.port-mark {
 		    fill: #787887;
 		}
 		
-		.port-Brick circle {
+		.port-Brick circle.port-mark {
 		    fill: firebrick;
 		}
-		.port-any circle {
+		.port-any circle.port-mark {
 			fill: white;
 		}
 		
@@ -1254,6 +1333,12 @@ function enableBoardPanZoom(board, boardContainer) {
 			width: 110px;
 			text-align: left;
 		}
+		.offer {
+			position:absolute;
+			top:50px;
+			height: 50px;
+			width: 110px;
+		}
 		.current-player {
 			background-color:rgba(255, 230, 90, 0.2);
 		}
@@ -1261,14 +1346,26 @@ function enableBoardPanZoom(board, boardContainer) {
 		.player-1 {
 			left: 40px;
 		}
+		.offer-1 {
+			left: 115px;
+		}
 		.player-2 {
 			left: 150px;
+		}
+		.offer-2 {
+			left: 225px;
 		}
 		.player-3 {
 			left: 260px;
 		}
+		.offer-3 {
+			left: 370px;
+		}
 		.player-4 {
 			left: 370px;
+		}
+		.offer-4 {
+			left: 480px;
 		}
 		
 		#playersDiv {
@@ -1305,6 +1402,17 @@ function enableBoardPanZoom(board, boardContainer) {
 			right:0;
 			bottom:100px;
 			z-index: -100;
+		}
+		#tradeDiv {
+			position:absolute;
+			background: rgba(0,0,255,0.2);
+			left:0;
+			right:0;
+			height:0;
+			bottom:100px;
+			overflow:hidden;
+			
+			transition: all 0.25s ease-in-out;
 		}
 		#hud {
 			position:absolute;
