@@ -52,7 +52,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.collections.MultiHashMap;
+import org.apache.commons.collections.map.MultiValueMap;
 import org.apache.commons.collections.MultiMap;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -111,7 +111,7 @@ public class Config implements NamespaceContext {
 	private Config() {
 		props_ = new Properties();
 		
-		aliasMap_ = new MultiHashMap();
+		aliasMap_ = new MultiValueMap();
 		namespaceMap_ = new HashMap<String,String>();
 		 
 		try {
