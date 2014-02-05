@@ -32,6 +32,8 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 import org.mozilla.javascript.Scriptable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -44,12 +46,13 @@ import com.livegameengine.util.Util;
 
 
 @PersistenceCapable
-public class ClientMessage implements Scriptable, XmlSerializable {
+public class ClientMessage implements Scriptable, XmlSerializable, GameContextAware {
 	private static final long serialVersionUID = 4649802893267737142L;
 		
 	private static final String LOCAL_NAME = "clientMessage";
 	private static final String NAMESPACE_PREFIX = "game";
-	private static Config config_ = Config.getInstance();
+	
+	@NotPersistent private Util util;	
 	
 	@NotPersistent
 	private Scriptable parent_, prototype_; 
@@ -77,19 +80,8 @@ public class ClientMessage implements Scriptable, XmlSerializable {
 	@Persistent
 	private Key gameKey;
 	
-	public static List<ClientMessage> findClientMessagesSince(Game g, Date since) {
-		PersistenceManager pm = PMF.getInstance().getPersistenceManager();
-		Query q = pm.newQuery(ClientMessage.class);
-				
-		q.setFilter("gameKey == gameKeyIn && messageDate > since");
-		q.declareParameters(Date.class.getName() + " since, " + Key.class.getName() + " gameKeyIn");
-		q.setOrdering("messageDate asc");
-		q.setRange(0,1000);
-		
-		return (List<ClientMessage>)q.execute(since, g.getKey());		
-	}
-	
-	public ClientMessage(Game g, String name, Map<String,String> params) {
+	public ClientMessage(Util util, Game g, String name, Map<String,String> params) {
+		this.util = util;
 		this.gameKey = g.getKey();
 		this.name = name;
 		this.messageDate = new Date();
@@ -112,14 +104,14 @@ public class ClientMessage implements Scriptable, XmlSerializable {
 		}
 	}
 	
-	public ClientMessage(Game g, String name, Map<String,String> params, String content) {
-		this(g, name, params);
+	public ClientMessage(Util util, Game g, String name, Map<String,String> params, String content) {
+		this(util, g, name, params);
 		
 		setContent(content);
 	}
 	
-	public ClientMessage(Game g, String name, Map<String,String> params, Node content) {
-		this(g, name, params);
+	public ClientMessage(Util util, Game g, String name, Map<String,String> params, Node content) {
+		this(util, g, name, params);
 		
 		setContent(content);
 	}
@@ -196,8 +188,8 @@ public class ClientMessage implements Scriptable, XmlSerializable {
 	// returns either String or Node (or null)
 	public Object getContent() {
 		try {
-			Document doc = config_.newXmlDocument();
-			Transformer trans = config_.newTransformer();
+			Document doc = util.newXmlDocument();
+			Transformer trans = util.newTransformer();
 			
 			trans.transform(new StreamSource(new ByteArrayInputStream(content.getBytes())), new DOMResult(doc));
 			
@@ -224,7 +216,7 @@ public class ClientMessage implements Scriptable, XmlSerializable {
 		
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			Transformer trans = config_.newTransformer();
+			Transformer trans = util.newTransformer();
 			
 			trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
 			
@@ -249,17 +241,17 @@ public class ClientMessage implements Scriptable, XmlSerializable {
 	
 	public void serializeToXml(String elementName, XMLStreamWriter writer, Node replacementContent)
 			throws XMLStreamException {
-		String ns = config_.getGameEngineNamespace();
+		String ns = util.getGameEngineNamespace();
 		
 		if(writer.getPrefix(ns) == null) {
-			writer.setPrefix(config_.getGameEngineDefaultNamespacePrefix(), config_.getGameEngineNamespace());
+			writer.setPrefix(util.getGameEngineDefaultNamespacePrefix(), util.getGameEngineNamespace());
 		}
 		
 		writer.writeStartElement(ns, elementName);
 		writer.writeAttribute("key", KeyFactory.keyToString(key));
 		
 		writer.writeStartElement(ns, "messageDate");
-		writer.writeCharacters(config_.getDateFormat().format(getMessageDate()));
+		writer.writeCharacters(util.formatDate(getMessageDate()));
 		writer.writeEndElement();
 		
 		writer.writeStartElement(ns, "event");
@@ -290,7 +282,7 @@ public class ClientMessage implements Scriptable, XmlSerializable {
 				writer.writeCharacters((String)c);
 			}
 			else if(Node.class.isAssignableFrom(c.getClass())) {
-				Util.writeNode((Node)c, writer);
+				util.writeNode((Node)c, writer);
 			}
 						
 			writer.writeEndElement();
@@ -318,7 +310,7 @@ public class ClientMessage implements Scriptable, XmlSerializable {
 
 	@Override
 	public String getNamespaceUri() {
-		return config_.getGameEngineNamespace();
+		return util.getGameEngineNamespace();
 	}
 
 	@Override
@@ -412,6 +404,11 @@ public class ClientMessage implements Scriptable, XmlSerializable {
 	@Override
 	public void setPrototype(Scriptable arg0) {
 		prototype_ = arg0;
+	}
+
+	@Override
+	public void setUtilityObject(Util util) {
+		this.util = util;
 	}
 	
 }

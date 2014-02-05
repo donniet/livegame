@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.jdo.PersistenceManager;
+import javax.jdo.Query;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -40,6 +41,7 @@ import javax.xml.transform.stream.StreamSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -80,7 +82,11 @@ import com.sun.xml.internal.fastinfoset.stax.util.StAXParserWrapper;
 @RequestMapping("/game")
 public class GameServlet implements ServletContextAware {
 	Log log = LogFactory.getLog(GameServlet.class);
-	@Autowired Config config;
+	@Autowired Util util;
+	@Autowired PMF pmf;
+	@Value("${encoding}") private String encoding;
+	@Value("${gameenginenamespace}") private String gameEngineNamespace;
+	
 	ServletContext cxt = null;
 	
 	@RequestMapping("/-/{gameId}")
@@ -111,8 +117,8 @@ public class GameServlet implements ServletContextAware {
 		XMLOutputFactory factory = XMLOutputFactory.newFactory();
 		XMLStreamWriter writer = null;
 		
-		writer = factory.createXMLStreamWriter(responseStream, config.getEncoding());
-		writer.setDefaultNamespace(config.getGameEngineNamespace());
+		writer = factory.createXMLStreamWriter(responseStream, encoding);
+		writer.setDefaultNamespace(gameEngineNamespace);
 		
 		
 		writer.writeStartDocument();
@@ -162,7 +168,7 @@ public class GameServlet implements ServletContextAware {
 	}
 	
 	private void handleActionError(Game g, HttpServletResponse resp) throws IOException, TransformerException {
-		Document doc1 = config.newXmlDocument();
+		Document doc1 = util.newXmlDocument();
 		
 		String errorMessage = "";
 		if(!g.isError()) {
@@ -173,14 +179,14 @@ public class GameServlet implements ServletContextAware {
 			errorMessage = g.getErrorMessage();
 		}
 		
-		Node error = doc1.createElementNS(config.getGameEngineNamespace(), "error");
+		Node error = doc1.createElementNS(gameEngineNamespace, "error");
 		error.appendChild(doc1.createTextNode(errorMessage));
 		doc1.appendChild(error);
 								
 		resp.setContentType("application/xml");
 		resp.setStatus(400);
 		Transformer trans;
-		trans = config.newTransformer();
+		trans = util.newTransformer();
 		trans.transform(new DOMSource(doc1), new StreamResult(resp.getOutputStream()));
 		
 		g.clearError();
@@ -227,7 +233,7 @@ public class GameServlet implements ServletContextAware {
 					throws IOException, GameLoadException, TransformerException {
 		
 		String eventName = "board." + event;
-		Document doc = config.newXmlDocument();
+		Document doc = util.newXmlDocument();
 		
 		UserService userService = UserServiceFactory.getUserService();
 		User u = userService.getCurrentUser();
@@ -235,9 +241,9 @@ public class GameServlet implements ServletContextAware {
 		Game g = Game.findGameByKey(KeyFactory.stringToKey(gameId));
 		
 		
-		Node data = doc.createElementNS(config.getGameEngineNamespace(), "data");
+		Node data = doc.createElementNS(gameEngineNamespace, "data");
 		
-		Node player = doc.createElementNS(config.getGameEngineNamespace(), "player");
+		Node player = doc.createElementNS(gameEngineNamespace, "player");
 		player.appendChild(doc.createTextNode(gu.getHashedUserId()));
 		
 		data.appendChild(player);
@@ -247,7 +253,7 @@ public class GameServlet implements ServletContextAware {
 						
 		if(req.getContentLength() > 0) {
 			try {
-				Transformer trans = config.newTransformer();
+				Transformer trans = util.newTransformer();
 				
 				trans.transform(new StreamSource(req.getInputStream()), dr);
 			} catch (TransformerException e) {
@@ -260,6 +266,27 @@ public class GameServlet implements ServletContextAware {
 		}
 		else {
 			resp.setStatus(200);
+		}
+	}
+	
+	public Watcher findWatcherByGameAndGameUser(final Game gameIn, final GameUser gameUserIn) {
+		PersistenceManager pm = pmf.getFactory().getPersistenceManager();
+		
+		try {
+			Query q = pm.newQuery(Watcher.class);
+			q.setFilter("gameKey == gameKeyIn && gameUserKey == gameUserKeyIn");
+			q.declareParameters(Key.class.getName() + " gameKeyIn, " + Key.class.getName() + " gameUserKeyIn");
+			List<Watcher> results = (List<Watcher>)q.execute(gameIn.getKey(), gameUserIn.getKey());
+			
+			if(results.size() > 0) {
+				return results.get(0);
+			}
+			else {
+				return null;
+			}
+		}
+		finally {
+			pm.close();
 		}
 	}
 	
@@ -291,12 +318,31 @@ public class GameServlet implements ServletContextAware {
 		
 		Set<String> listeners = parseAddListenersRequest(req);
 		
-		Watcher w = Watcher.findWatcherByGameAndGameUser(g, gu);
+		Watcher w = findWatcherByGameAndGameUser(g, gu);
 		
 		if(w != null) {
 			w.addListners(listeners);
 		}		
 	}
+	
+	private List<ClientMessage> getClientMessagesSince(Game g, Date since) {
+		PersistenceManager pm = pmf.getFactory().getPersistenceManager();
+		
+		try {
+			Query q = pm.newQuery(ClientMessage.class);
+					
+			q.setFilter("gameKey == gameKeyIn && messageDate > since");
+			q.declareParameters(Date.class.getName() + " since, " + Key.class.getName() + " gameKeyIn");
+			q.setOrdering("messageDate asc");
+			q.setRange(0,1000);
+			
+			return (List<ClientMessage>)q.execute(since, g.getKey());		
+		}
+		finally {
+			pm.close();
+		}
+	}
+	
 	
 	@RequestMapping(value="/-/{gameId}/message", method=RequestMethod.GET)
 	public void doGetMessage(@PathVariable String gameId, @RequestParam(value="since", required=true) String since, HttpServletResponse resp)
@@ -312,7 +358,7 @@ public class GameServlet implements ServletContextAware {
 		
 		Date s;
 		try {
-			s = config.getDateFormat().parse(since);
+			s = util.parseDate(since);
 		} catch (ParseException e) {
 			resp.setStatus(400);
 			return;
@@ -320,7 +366,7 @@ public class GameServlet implements ServletContextAware {
 		
 		//log.info(String.format("since: %s, parsed: %s", since, config.getDateFormat().format(s)));
 
-		List<ClientMessage> messages = ClientMessage.findClientMessagesSince(g, s);
+		List<ClientMessage> messages = getClientMessagesSince(g, s);
 		
 		if(messages == null || messages.size() == 0) {
 			resp.setStatus(204);

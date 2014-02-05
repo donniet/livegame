@@ -31,13 +31,16 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.users.User;
 import com.livegameengine.persist.PMF;
+import com.livegameengine.util.Util;
 
 @PersistenceCapable 
-public class GameUser implements Scriptable, XmlSerializable {
+public class GameUser implements Scriptable, XmlSerializable, GameContextAware {
 	private static final long serialVersionUID = 4649802893267737142L;
 	
 	private static final String LOCAL_NAME = "gameUser";
 	private static final String NAMESPACE_PREFIX = "game";
+	
+	@NotPersistent private Util util;
 	
 	@NotPersistent
 	private Scriptable prototype_; 
@@ -60,7 +63,7 @@ public class GameUser implements Scriptable, XmlSerializable {
 	private GameUser(final User user) {
 		setUser(user);
 	}
-	
+	/*
 	public static GameUser findByKey(final Key key) {
 		PersistenceManager pm = PMF.getInstance().getPersistenceManager();
 		
@@ -73,6 +76,7 @@ public class GameUser implements Scriptable, XmlSerializable {
 		
 		return findByKey(key);		
 	}
+	*/
 	
 	public static GameUser findOrCreateGameUserByUser(final User user) {
 		PersistenceManager pm = PMF.getInstance().getPersistenceManager();
@@ -257,6 +261,11 @@ public class GameUser implements Scriptable, XmlSerializable {
 	@Override
 	public void setPrototype(Scriptable arg0) {
 		prototype_ = arg0;
+	}
+
+	@Override
+	public void setUtilityObject(Util util) {
+		this.util = util;
 	}
 
 

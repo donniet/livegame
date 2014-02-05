@@ -52,8 +52,9 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.collections.MultiHashMap;
 import org.apache.commons.collections.MultiMap;
+import org.apache.commons.collections.map.MultiValueMap;
+import org.springframework.beans.factory.annotation.Value;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -66,17 +67,17 @@ import com.livegameengine.model.XmlSerializable;
 
 import flexjson.transformer.DateTransformer;
 
-public class Config implements NamespaceContext {
+public class Config /* implements NamespaceContext */ {
 	private static Config instance_ = null;
 	
 	private Properties props_ = null;
-	private String dateFormatString_ = null;
+	@Value("${dateFormat}") private String dateFormatString_;
 	private DateFormat dateFormat_ = null;
 	private DateTransformer dateTransformer_ = null;
 	private Random random_ = null;
-	private String encoding_ = null;
-	private String digestAlgorithm_ = null;
-	private String encryptionAlgorithm_ = null;
+	@Value("${encoding}") private String encoding_;
+	@Value("${digestAlgorithm}") private String digestAlgorithm_;
+	@Value("${encryptionAlgorithm}") private String encryptionAlgorithm_;
 	private byte[] privateKey_ = new byte[] {0x0};
 	private byte[] initializationVector_ = new byte[] {0x0};
 	private String gameEngineDefaultNamespacePrefix_ = "";
@@ -111,7 +112,7 @@ public class Config implements NamespaceContext {
 	private Config() {
 		props_ = new Properties();
 		
-		aliasMap_ = new MultiHashMap();
+		aliasMap_ = new MultiValueMap();
 		namespaceMap_ = new HashMap<String,String>();
 		 
 		try {
@@ -177,7 +178,7 @@ public class Config implements NamespaceContext {
 			e.printStackTrace();
 		}
 	}
-	
+	/*
 	public InputStream getDataModelTransformStream() {
 		return Config.class.getResourceAsStream(datamodeltransformresource_);
 	}
@@ -248,115 +249,8 @@ public class Config implements NamespaceContext {
 	public String getViewDoctypePublic() {
 		return viewDoctypePublic_;
 	}
-	private static String hex(byte[] array) {
-		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < array.length; ++i) {
-		sb.append(Integer.toHexString((array[i]
-				& 0xFF) | 0x100).substring(1,3));       
-		}
-		return sb.toString();
-	}
-	public String getMD5Hash (String message) {
-		try {
-			MessageDigest md = MessageDigest.getInstance("MD5");
-			return hex (md.digest(message.getBytes("CP1252")));
-		} catch (NoSuchAlgorithmException e) {
-		} catch (UnsupportedEncodingException e) {
-		}
-		return null;
-	}
-	/*
-	public String getMD5Hash(String str) {
-		try {
-			MessageDigest digest = MessageDigest.getInstance("MD5");
-			byte[] out = digest.digest(str.getBytes(getEncoding()));
-			BigInteger outInt = new BigInteger(out); 
-			
-			return outInt.toString(16);
-		} catch (NoSuchAlgorithmException e) {
-			return null;
-		} catch (UnsupportedEncodingException e) {
-			return null;
-		}
-	}
-	*/
-	public String getHash(String str, byte[] salt) {
-		try {
-			MessageDigest digest = MessageDigest.getInstance(getDigestAlgorithm());
-			digest.reset();
-			digest.update(salt);
-			byte[] out = digest.digest(str.getBytes(getEncoding()));
-			
-			return Base64.encodeBase64URLSafeString(out);
-		}
-		catch(UnsupportedEncodingException e) {
-			//TODO: add logging
-			return null;
-		}
-		catch(NoSuchAlgorithmException e) {
-			//TODO: add logging
-			return null;
-		}
-	}
-
 	public int getMaxScriptRuntime() {
 		return maxScriptRuntime_;
-	}
-	
-	public String encryptString(String plain) {
-		SecretKeySpec key = new SecretKeySpec(getPrivateKey(), getEncryptionAlgorithm());
-		String ret = null;
-				
-		try {
-			byte[] input = plain.getBytes(getEncoding());
-			
-			Cipher cipher = Cipher.getInstance(getEncryptionAlgorithm());
-			cipher.init(Cipher.ENCRYPT_MODE, key);
-			byte[] encrypted = new byte[cipher.getOutputSize(input.length)];
-			int enc_len = cipher.update(input, 0, input.length, encrypted, 0);
-			enc_len += cipher.doFinal(encrypted, enc_len);
-			
-			ret = Base64.encodeBase64String(encrypted);
-			
-		} 
-		catch (NoSuchAlgorithmException e) {} 
-		catch (NoSuchPaddingException e) {} 
-		catch (InvalidKeyException e) {
-			e.printStackTrace();
-		} 
-		catch (ShortBufferException e) {} 
-		catch (UnsupportedEncodingException e) {} 
-		catch (IllegalBlockSizeException e) {} 
-		catch (BadPaddingException e) {}
-		
-		return ret;
-		
-	}
-	public String decryptString(String crypt) {
-		SecretKeySpec key = new SecretKeySpec(getPrivateKey(), getEncryptionAlgorithm());
-		String ret = null;
-		
-		byte[] input = Base64.decodeBase64(crypt);
-		
-		try {
-			Cipher cipher = Cipher.getInstance(getEncryptionAlgorithm());
-			cipher.init(Cipher.DECRYPT_MODE, key);
-			
-			byte[] decrypted = new byte[cipher.getOutputSize(input.length)];
-			int dec_len = cipher.update(input, 0, input.length, decrypted, 0);
-			dec_len += cipher.doFinal(decrypted, dec_len);
-			
-			ret = new String(decrypted, getEncoding());			
-		} 
-		catch (NoSuchAlgorithmException e) {} 
-		catch (NoSuchPaddingException e) {} 
-		catch (InvalidKeyException e) {} 
-		catch (ShortBufferException e) {} 
-		catch (UnsupportedEncodingException e) {} 
-		catch (IllegalBlockSizeException e) {} 
-		catch (BadPaddingException e) {}
-		
-		return ret;
 	}
 	
 	public Document newXmlDocument() {
@@ -366,7 +260,8 @@ public class Config implements NamespaceContext {
 	public DocumentBuilder getDocumentBuilder() {
 		return documentBuilder_;
 	}
-	
+
+
 	@Override
 	public Iterator getPrefixes(String namespaceURI) {
 		Collection prefixes = (Collection)aliasMap_.get(namespaceURI);
@@ -396,39 +291,27 @@ public class Config implements NamespaceContext {
 		return namespaceMap_.get(prefix);
 	}
 	
-	public NodeList serializeToNodeList(String localName, XmlSerializable obj, Node parent) throws XMLStreamException {
-		XMLOutputFactory factory = XMLOutputFactory.newFactory();
-	    //factory.setProperty("javax.xml.stream.isPrefixDefaulting",Boolean.TRUE);
-				
-		XMLStreamWriter writer = factory.createXMLStreamWriter(new DOMResult(parent));
 
-		//writer.setNamespaceContext(this);
-		
-		writer.setDefaultNamespace(obj.getNamespaceUri());
-		writer.setPrefix(getGameEngineDefaultNamespacePrefix(), getGameEngineNamespace());		
-		
-		obj.serializeToXml(localName, writer);
-		
-		return parent.getChildNodes();
-	}
+	*/
 	
-	public NodeList serializeToNodeList(String localName, XmlSerializable obj) throws XMLStreamException {
-		Document doc = newXmlDocument();
-				
-		return serializeToNodeList(localName,  obj, doc);
+	/*
+	public String getMD5Hash(String str) {
+		try {
+			MessageDigest digest = MessageDigest.getInstance("MD5");
+			byte[] out = digest.digest(str.getBytes(getEncoding()));
+			BigInteger outInt = new BigInteger(out); 
+			
+			return outInt.toString(16);
+		} catch (NoSuchAlgorithmException e) {
+			return null;
+		} catch (UnsupportedEncodingException e) {
+			return null;
+		}
 	}
-	
-	public NodeList serializeToNodeList(XmlSerializable obj) throws XMLStreamException {
-		return serializeToNodeList(obj.getDefaultLocalName(), obj);
-	}
+	*/
 
-	public Transformer newTransformer() throws TransformerConfigurationException {
-		return transformerFactory_.newTransformer();
-	}
 	
-	public Transformer newTransformer(Source source) throws TransformerConfigurationException {
-		return transformerFactory_.newTransformer(source);
-	}
+	
 	/*
 	public void transformDatamodel(GameState gameState, Result result, String playerid) throws TransformerConfigurationException, TransformerException {
 		Document doc = this.newXmlDocument();
@@ -451,41 +334,5 @@ public class Config implements NamespaceContext {
 		transformAsDatamodel(new DOMSource(doc), result, playerid);
 	}
 	*/
-	public void transformAsDatamodel(Source source, Result result, String playerid) throws TransformerConfigurationException, TransformerException {
-		Transformer trans = transformerFactory_.newTransformer(new StreamSource(getDataModelTransformStream()));
-		trans.setParameter(this.getDataModelTransformPlayerIdParam(), playerid);				
-		
-		trans.transform(source, result);
-	}
 	
-
-	public void transformFromResource(String resourceUrl, Source source, Result result)  
-			throws TransformerConfigurationException, TransformerException, FileNotFoundException {
-		this.transformFromResource(resourceUrl, source, result, null);
-	}
-	
-	
-	public void transformFromResource(String resourceUrl, Source source, Result result, Map<String, Object> params) 
-			throws TransformerConfigurationException, TransformerException, FileNotFoundException {
-		//InputStream resource = Config.class.getResourceAsStream(resourceUrl);
-		FileInputStream resource = new FileInputStream(resourceUrl);
-		
-		Transformer trans = transformerFactory_.newTransformer(new StreamSource(resource));
-		
-		if(trans == null) {
-			throw new TransformerException("transformer not valid");
-		}
-		
-		trans.setOutputProperty(OutputKeys.INDENT, "yes");
-		
-		if(params != null) {
-			for(Iterator<String> i = params.keySet().iterator(); i.hasNext();) {
-				String key = i.next();
-				
-				trans.setParameter(key, params.get(key));
-			}
-		}
-		
-		trans.transform(source, result);
-	}
 }

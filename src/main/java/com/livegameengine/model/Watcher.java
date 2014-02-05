@@ -12,22 +12,28 @@ import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 import javax.jdo.annotations.IdGeneratorStrategy;
+import javax.jdo.annotations.NotPersistent;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.PrimaryKey;
 import javax.jdo.annotations.Persistent;
 
 import org.apache.commons.codec.binary.Base64;
+
 import com.livegameengine.config.Config;
+
 import org.mozilla.javascript.ScriptableObject;
 
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.livegameengine.persist.PMF;
+import com.livegameengine.util.Util;
 
 @PersistenceCapable 
-public class Watcher extends ScriptableObject { 
+public class Watcher extends ScriptableObject implements GameContextAware { 
 	private static final long serialVersionUID = 1L;
 
+	@NotPersistent private Util util;
+	
 	@PrimaryKey
 	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
 	private Key key;
@@ -44,44 +50,19 @@ public class Watcher extends ScriptableObject {
 	@Persistent
 	private Set<String> listeningFor;
 		
-	public Watcher() {}
+	public Watcher(Util util) {
+		this.util = util;
+	}
 	
-	public Watcher(Game gameIn, GameUser gameUserIn) {
+	public Watcher(Util util, Game gameIn, GameUser gameUserIn) {
+		this.util = util;
 		gameKey = gameIn.getKey();
 		gameUserKey = gameUserIn.getKey();
 		listeningFor = new HashSet<String>();
 		
-		channelkey = hashGameAndGameUser(gameIn, gameUserIn);
+		channelkey = util.hashGameAndGameUser(gameIn, gameUserIn);
 	}
-	
-	public static Watcher findWatcherByChannelKey(final String channelkeyIn) {
-		PersistenceManager pm = PMF.getInstance().getPersistenceManager();
-		
-		Query q = pm.newQuery(Watcher.class);
-		q.setFilter("channelkey == channelkeyIn");
-		q.declareParameters(String.class.getName() + " channelkeyIn");
-		List<Watcher> results = (List<Watcher>)q.execute(channelkeyIn);
-		
-		if(results.size() > 0) {
-			return results.get(0);
-		}
-		else {
-			return null;
-		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static List<Watcher> findWatchersByGame(final Game gameIn) {
-		PersistenceManager pm = PMF.getInstance().getPersistenceManager();
-		
-		Query q = pm.newQuery(Watcher.class);
-		q.setFilter("gameKey == gameKeyIn");
-		q.declareParameters(Key.class.getName() + " gameKeyIn");
-		List<Watcher> results = (List<Watcher>)q.execute(gameIn.getKey());
-		
-		return results;
-	}
-	
+	/*
 	public static Watcher findWatcherByGameAndGameUser(final Game gameIn, final GameUser gameUserIn) {
 		PersistenceManager pm = PMF.getInstance().getPersistenceManager();
 		
@@ -97,33 +78,7 @@ public class Watcher extends ScriptableObject {
 			return null;
 		}
 	}
-	
-	public static String hashGameAndGameUser(final Game gameIn, final GameUser gameUserIn) {
-		Config config = Config.getInstance();
-		
-		String ret = "";
-		
-		try {
-			MessageDigest digest = MessageDigest.getInstance(config.getDigestAlgorithm());
-			digest.reset();
-			// salt with the class name
-			digest.update(Watcher.class.getName().getBytes(config.getEncoding()));
-			digest.update(KeyFactory.keyToString(gameIn.getKey()).getBytes(config.getEncoding()));
-			digest.update(KeyFactory.keyToString(gameUserIn.getKey()).getBytes(config.getEncoding()));
-			byte[] out = digest.digest();
-			ret = Base64.encodeBase64URLSafeString(out);
-		}
-		catch(UnsupportedEncodingException e) {
-			//TODO: handle exception
-			e.printStackTrace();
-		} 
-		catch (NoSuchAlgorithmException e) {
-			// TODO: handle exception
-			e.printStackTrace();
-		}
-		
-		return ret;
-	}
+	*/
 	
 	public void addListners(Set<String> events) {
 		listeningFor.addAll(events);
@@ -176,6 +131,11 @@ public class Watcher extends ScriptableObject {
 
 	public String getChannelkey() {
 		return channelkey;
+	}
+
+	@Override
+	public void setUtilityObject(Util util) {
+		this.util = util;
 	}
 
 }

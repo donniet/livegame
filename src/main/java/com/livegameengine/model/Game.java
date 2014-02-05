@@ -36,6 +36,7 @@ import org.apache.commons.scxml.model.SCXML;
 import org.apache.commons.scxml.model.State;
 import org.apache.commons.scxml.model.Transition;
 import org.apache.commons.scxml.model.TransitionTarget;
+
 import com.livegameengine.config.Config;
 import com.livegameengine.error.GameLoadException;
 import com.livegameengine.persist.PMF;
@@ -190,6 +191,7 @@ public class Game implements Scriptable, EventDispatcher, SCXMLListener, XmlSeri
 	@NotPersistent private Log log_;
 	
 	@NotPersistent transient private GameUser currentUser_ = null;
+	
 	
 	//public Game() {}
 	
@@ -834,9 +836,23 @@ public class Game implements Scriptable, EventDispatcher, SCXMLListener, XmlSeri
 		
 		return p;
 	}
+		
 	public List<Watcher> getWatchers() {
-		return Watcher.findWatchersByGame(this);
+		PersistenceManager pm = PMF.getInstance().getPersistenceManager();
+		
+		try {
+			Query q = pm.newQuery(Watcher.class);
+			q.setFilter("gameKey == gameKeyIn");
+			q.declareParameters(Key.class.getName() + " gameKeyIn");
+			List<Watcher> results = (List<Watcher>)q.execute(gameIn.getKey());
+			
+			return results;
+		}
+		finally {
+			pm.close();
+		}
 	}
+	
 	public Watcher addWatcher(User user) {
 		final GameUser gu = GameUser.findOrCreateGameUserByUser(user);
 		final Game game = this;

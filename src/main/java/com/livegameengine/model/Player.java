@@ -27,12 +27,14 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.users.User;
 import com.livegameengine.config.Config;
 import com.livegameengine.persist.PMF;
+import com.livegameengine.util.Util;
 
 @PersistenceCapable
-public class Player implements Scriptable, XmlSerializable {
+public class Player implements Scriptable, XmlSerializable, GameContextAware {
 	private static final long serialVersionUID = 1;
 	
 	@NotPersistent private Scriptable prototype_, parent_;
+	@NotPersistent private Util util;
 
 	@PrimaryKey
 	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
@@ -55,14 +57,14 @@ public class Player implements Scriptable, XmlSerializable {
 		
 	public Player() {} 
 	
-	protected Player(Game game, GameUser gameUser, String role) {
+	protected Player(Util util, Game game, GameUser gameUser, String role) {
 		this.game = game;
 		this.gameUserKey = gameUser.getKey();
 		this.role = role;
 		this.playerJoin = new Date();
 		this.winner = false;
 	}
-	protected Player(Game game, GameUser gameUser, String role, Date playerJoin) {
+	protected Player(Util util, Game game, GameUser gameUser, String role, Date playerJoin) {
 		this.game = game;
 		this.gameUserKey = gameUser.getKey();
 		this.role = role;
@@ -110,7 +112,7 @@ public class Player implements Scriptable, XmlSerializable {
 
 	@Override
 	public void serializeToXml(String elementName, XMLStreamWriter writer) throws XMLStreamException {
-		String ns = Config.getInstance().getGameEngineNamespace();
+		String ns = util.getGameEngineNamespace();
 		
 		writer.writeStartElement(ns, elementName);
 		writer.writeAttribute("key", KeyFactory.keyToString(getKey()));
@@ -122,7 +124,7 @@ public class Player implements Scriptable, XmlSerializable {
 		writer.writeCharacters(getRole());
 		writer.writeEndElement();
 		writer.writeStartElement(ns, "playerJoin");
-		writer.writeCharacters(Config.getInstance().getDateFormat().format(this.playerJoin));
+		writer.writeCharacters(util.formatDate(this.playerJoin));
 		writer.writeEndElement();
 		
 		writer.writeEndElement();
@@ -133,7 +135,7 @@ public class Player implements Scriptable, XmlSerializable {
 	}
 	
 	@Override public String getNamespaceUri() {
-		return Config.getInstance().getGameEngineNamespace();
+		return util.getGameEngineNamespace();
 	}
 	
 	@Override public String getDefaultLocalName() {
@@ -234,5 +236,10 @@ public class Player implements Scriptable, XmlSerializable {
 	@Override
 	public void setPrototype(Scriptable arg0) {
 		prototype_ = arg0;
+	}
+
+	@Override
+	public void setUtilityObject(Util util) {
+		this.util = util;
 	}
 }

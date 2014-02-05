@@ -98,13 +98,9 @@ public class GameTransformer extends Transformer {
 			
 			List<GameStateData> datamodel = s.getGameState().getDatamodel();
 			
-			Transformer trans = null;
-			
 			for(Iterator<GameStateData> i = datamodel.iterator(); i.hasNext();) {
 				GameStateData gsd = i.next();
 
-				trans = config.newTransformer();
-				
 				gsd.appendValueInto(datamodelNode);
 			}
 			

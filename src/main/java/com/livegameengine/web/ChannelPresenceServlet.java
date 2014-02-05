@@ -9,10 +9,12 @@ import java.util.Map;
 import javax.jdo.JDOHelper;
 import javax.jdo.ObjectState;
 import javax.jdo.PersistenceManager;
+import javax.jdo.Query;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -30,10 +32,35 @@ import com.livegameengine.model.GameUser;
 import com.livegameengine.model.Player;
 import com.livegameengine.model.Watcher;
 import com.livegameengine.persist.PMF;
+import com.livegameengine.util.Util;
 
 
 @Controller
 public class ChannelPresenceServlet extends HttpServlet {
+	
+	@Autowired private PMF pmf;
+	@Autowired private Util util;
+	
+	public Watcher findWatcherByChannelKey(final String channelkeyIn) {
+		PersistenceManager pm = pmf.getFactory().getPersistenceManager();
+		
+		try {
+			Query q = pm.newQuery(Watcher.class);
+			q.setFilter("channelkey == channelkeyIn");
+			q.declareParameters(String.class.getName() + " channelkeyIn");
+			List<Watcher> results = (List<Watcher>)q.execute(channelkeyIn);
+			
+			if(results.size() > 0) {
+				return results.get(0);
+			}
+			else {
+				return null;
+			}
+		}
+		finally {
+			pm.close();
+		}
+	}
 	
 	@RequestMapping(value="/_ah/channel/*",method=RequestMethod.POST)	
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -45,7 +72,7 @@ public class ChannelPresenceServlet extends HttpServlet {
 		
 		String channelKey = presence.clientId();
 		
-		Watcher w = Watcher.findWatcherByChannelKey(channelKey);
+		Watcher w = findWatcherByChannelKey(channelKey);
 
 		if(w == null) return;
 		
@@ -78,10 +105,15 @@ public class ChannelPresenceServlet extends HttpServlet {
 				params.put("connected", Boolean.toString(presence.isConnected()));
 				
 
-				ClientMessage m = new ClientMessage(g, "game.playerConnectionChange", params);
-				pm = PMF.getInstance().getPersistenceManager();
+				ClientMessage m = new ClientMessage(util, g, "game.playerConnectionChange", params);
+				pm = pmf.getFactory().getPersistenceManager();
 				
-				pm.makePersistent(m);
+				try {
+					pm.makePersistent(m);
+				}
+				finally {
+					pm.close();
+				}
 				
 				
 				//g.sendWatcherMessage("game.playerConnectionChange", params, null);
