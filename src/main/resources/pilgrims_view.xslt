@@ -79,6 +79,10 @@
 	
 	<xsl:variable name="pc" select="ex:node-set($polycorners)" />
 			
+	<xsl:template match="/">
+	    <xsl:apply-templates />
+	</xsl:template>
+	
 	<xsl:template match="game:root">
 		<xsl:apply-templates />
 	</xsl:template>		
@@ -214,6 +218,21 @@
 	</xsl:template>
 	
 		
+	<xsl:template name="board">
+		<svg:g id="board">
+			<xsl:apply-templates select="pil:polys" />
+			<xsl:apply-templates select="pil:edges" />
+			<xsl:apply-templates select="pil:ports" />
+			<xsl:apply-templates select="pil:verteces" />
+			<xsl:call-template name="fourtooneport" />
+			<script type="text/javascript">			
+				setTimeout(function() {
+					enableBoardPanZoom(document.getElementById("board"), document.getElementById("boardDiv"));
+				}, 100);
+			</script>
+		</svg:g>
+	</xsl:template>
+	
 	<xsl:template match="/game:message">
 		<xsl:apply-templates select="game:content/*" mode="copy" />
 	</xsl:template>
@@ -238,233 +257,8 @@
 					<xsl:call-template name="styles" />
 				</style>
 				<script type="text/javascript" src="/client/0.2/transform2d.js"></script>
-				<script type="text/javascript"><![CDATA[
-
-function getCookie(c_name)
-{
-	var i,x,y,ARRcookies=document.cookie.split(";");
-	for (i=0;i<ARRcookies.length;i++) {
-		x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
-		y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
-		x=x.replace(/^\s+|\s+$/g,"");
-		if (x==c_name) {
-			return unescape(y);
-		}
-	}
-}
-
-function setCookie(c_name,value,exdays)
-{
-	var exdate=new Date();
-	exdate.setDate(exdate.getDate() + exdays);
-	var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
-	document.cookie=c_name + "=" + c_value;
-}
-
-
-function enableBoardPanZoom(board, boardContainer) {
-	var trans = new Transform2d();	
-	
-	var t = getCookie("pilgrims-board-transform");
-	if(t) {
-		trans = Transform2d.fromJSON(t);
-		board.setAttribute("transform", trans.toSVG());
-		
-	}
-	
-	var blocker = document.createElement("div");
-	blocker.setAttribute("style", "position:absolute;top:0px;left:0px;height:100%;width:100%;");
-	
-	blocker.addEventListener("mouseup", mouseout, false);
-	blocker.addEventListener("mouseout", mouseout, false);
-	blocker.addEventListener("mousemove", mousemove, false);
-	//blocker.addEventListener("mousedown", mousedown, false);
-	
-	var mousedown_ = false;
-	var pageX_ = 0;
-	var pageY_ = 0;
-	
-	var blockerDiv = null;
-	
-	var mousemove = function(e) {
-		if(mousedown_) {
-			//console.log("move(" + e.pageX + "," + e.pageY + ")");
-			move(e.pageX, e.pageY);	
-			
-			e.preventDefault();
-			e.stopPropagation();	
-		}	
-	}
-	var mouseout = function(e) {
-		if(mousedown_) {
-			//console.log("stop(" + e.pageX + "," + e.pageY + ")");
-			move(e.pageX, e.pageY);
-			stopmove();
-			e.preventDefault();
-			e.stopPropagation();
-			
-			mousedown_ = false;
-		}	
-	}
-	var mousedown = function(e) {
-		//console.log("mousedown: " + e.which);
-		
-		if(e.which == 2) {
-			mousedown_ = true;
-			//console.log("start(" + e.pageX + "," + e.pageY + ")");
-			startmove(e.pageX, e.pageY);
-			
-			e.preventDefault();
-			e.stopPropagation();
-			e.cancelBubble = false;
-			return false;
-		}	
-	}
-	
-	var stopmove = function() {
-		document.body.removeChild(blocker);
-		console.log(trans.toJSON());
-		
-		setCookie("pilgrims-board-transform", trans.toJSON(), 1);
-	}
-	var startmove = function(pageX, pageY) {
-		document.body.appendChild(blocker);
-		
-		pageX_ = pageX;
-		pageY_ = pageY;
-	}
-	var move = function(pageX, pageY) {
-		//$(".chat-window").append("<p>px,py " + pageX + "," + pageY + "</p>");
-		//$(".chat-window").append("<p>epx,epy " + e.pageX + "," + e.pageY + "</p>");
-		
-		var x = pageX - pageX_;
-		var y = pageY - pageY_;
-		
-
-		//var vec = trans.transformFrom([x,y]);
-		
-		trans.translate(x,y);
-		
-		//console.log("transform: " + trans.toSVG());
-		board.setAttribute("transform", trans.toSVG());
-					
-		
-		pageX_ = pageX;
-		pageY_ = pageY;
-	}
-	
-	
-	var zoom = function(scale, pageX, pageY) {
-		var x = pageX - board.parentNode.parentNode.clientLeft;
-		var y = pageY - board.parentNode.parentNode.clientTop;
-					
-		
-		trans.translate(-x, -y).scale(scale).translate(x,y);
-		
-		/*
-		
-		$(".chat-window").append("<p>pos " + pos.left + "," + pos.top + "</p>");
-		$(".chat-window").append("<p>e " + e.pageX + "," + e.pageY + "</p>");
-		$(".chat-window").append("<p>x,y " + x + "," + y + "</p>");
-		$(".chat-window").append("<p>dx,dy " + dx + "," + dy + "</p>");
-		$(".chat-window").append("<p>x0,y0 " + vec0[0] + "," + vec0[1] + "</p>");
-		
-		var vec0 = trans.transformFrom([0,0]);
-		var vec1 = trans.transformFrom([x,y]);
-		
-		var dx = vec1[0] - vec0[0];
-		var dy = vec1[1] - vec0[1];
-		
-		var vec2 = trans.transformFrom([dx, dy]);
-		
-		trans.translate(vec2[0],vec2[1]);
-		*/
-		
-		board.setAttribute("transform", trans.toSVG());
-		setCookie("pilgrims-board-transform", trans.toJSON(), 1);
-	}
-
-	var mousewheel = function(e) {
-		var delta = 0;
-		if(e.detail) {
-			delta = -e.detail/3;
-		}
-		
-		if(delta != 0) {
-			var scale = Math.pow(1.1, delta);
-			
-			zoom(scale, e.pageX, e.pageY);
-		}
-		
-		if (e.preventDefault)
-	        e.preventDefault();
-		e.returnValue = false;
-	}
-	
-	var touchstart = function(e) {
-		e.preventDefault();
-		if(e.touches.length == 1) {
-			startmove(e.touches[0].pageX, e.touches[0].pageY);
-		}
-	}
-	var touchmove = function(e) {
-		e.preventDefault();
-		if(e.touches.length == 1) {
-			move(e.touches[0].pageX, e.touches[0].pageY);
-		}
-		
-	}
-	var touchend = function(e) {
-		e.preventDefault();
-		if(e.touches.length == 1) {
-			move(e.touches[0].pageX, e.touches[0].pageY);
-			stopmove();
-		}
-		
-	}
-	var touchcancel = function(e) {
-		
-	}
-	
-	var moztouchstart = function(e) {
-		e.preventDefault();
-		startmove(e.pageX, e.pageY);
-	}
-	var moztouchmove = function(e) {
-		e.preventDefault();
-		move(e.pageX, e.pageY);
-	}
-	var moztouchend = function(e) {
-		e.preventDefault();
-		move(e.pageX, e.pageY);
-		stopmove();
-	}
-	
-    if(window.addEventListener) 
-    	window.addEventListener('DOMMouseScroll', mousewheel, false);
-    
-    if(document.addEventListener) {
-    	document.addEventListener('touchstart', touchstart, false);
-    	document.addEventListener('touchmove', touchmove, false);
-    	document.addEventListener('touchend', touchend, false);
-    	document.addEventListener('touchcancel', touchcancel, false);
-    	
-    	document.addEventListener('MozTouchDown', moztouchstart, false);
-    	document.addEventListener('MozTouchMove', moztouchmove, false);
-    	document.addEventListener('MozTouchUp', moztouchend, false);
-    	
-    	document.addEventListener('mousedown', mousedown, false);
-    	document.addEventListener('mouseup', mouseout, false);
-    	//document.addEventListener('mouseout', mouseout, false);
-    	document.addEventListener('mousemove', mousemove, false);
-    	document.addEventListener('click', function(e) {
-    		console.log("document onclick");
-    		if(e.which == 2) e.preventDefault();
-    	}, false);
-    }
-}
-					
-				]]></script>
+				
+				<xsl:call-template name="scripts" />
 			</head>
 			
 			<body>
@@ -525,7 +319,7 @@ function enableBoardPanZoom(board, boardContainer) {
 							<xsl:otherwise>height:0;</xsl:otherwise>
 						</xsl:choose>
 					</xsl:attribute>
-					
+									
 					<view:eventHandlerPlaceholder event="board.tradeStarted" mode="attribute">
 						<view:attribute name="style">height:100px;</view:attribute>
 					</view:eventHandlerPlaceholder>
@@ -546,12 +340,53 @@ function enableBoardPanZoom(board, boardContainer) {
 		<xsl:apply-templates select="game:content/pil:trade" />
 	</xsl:template>
 	 
-	<xsl:template match="pil:trade">
-		<xsl:apply-templates select="pil:offer" />
-		<xsl:apply-templates select="pil:bankOffer" />
+	<xsl:template match="/game:message[game:event = 'game.playerJoin' or game:event = 'board.resourcesDistributed']">
+		<xsl:apply-templates select="$meta-doc//game:mostRecentState//pil:players" />
+	</xsl:template>
+	<xsl:template match="/game:message[game:event = 'board.diceRolled']">
+		<xsl:apply-templates select="game:content/pil:dice" />
+	</xsl:template>
+	<xsl:template match="/game:message[game:event = 'game.startGame']">
+		<svg:g id="board">
+			<xsl:apply-templates select="$meta-doc/game:game/game:mostRecentState//scxml:data[@name='state']/pil:board/pil:polys" />
+			<xsl:apply-templates select="$meta-doc/game:game/game:mostRecentState//scxml:data[@name='state']/pil:board/pil:edges" />
+			<xsl:apply-templates select="$meta-doc/game:game/game:mostRecentState//scxml:data[@name='state']/pil:board/pil:ports" />
+			<xsl:apply-templates select="$meta-doc/game:game/game:mostRecentState//scxml:data[@name='state']/pil:board/pil:verteces" />
+			<script type="text/javascript">			
+				setTimeout(function() {
+					enableBoardPanZoom(document.getElementById("board"), document.getElementById("boardDiv"));
+				}, 100);
+			</script>
+		</svg:g>
+	</xsl:template>
+	<xsl:template match="/game:message[game:event = 'board.placeVertexDevelopment']">
+		<xsl:variable name="dev">
+			<pil:vertex x="{game:param[@name = 'x']}" y="{game:param[@name = 'y']}"> 
+				<pil:development type="{game:param[@name = 'type']}" color="{game:param[@name = 'color']}" />
+			</pil:vertex>
+		</xsl:variable>
+		
+		<xsl:apply-templates select="ex:node-set($dev)/pil:vertex/pil:development" />
+	</xsl:template>
+	<xsl:template match="/game:message[game:event = 'board.placeEdgeDevelopment']">
+		<xsl:variable name="dev">
+			<pil:edge x1="{game:param[@name = 'x1']}" y1="{game:param[@name = 'y1']}" x2="{game:param[@name = 'x2']}" y2="{game:param[@name = 'y2']}"> 
+				<pil:development type="{game:param[@name = 'type']}" color="{game:param[@name = 'color']}" />
+			</pil:edge>
+		</xsl:variable>
+		
+		<xsl:apply-templates select="ex:node-set($dev)/pil:edge/pil:development" />
 	</xsl:template>
 	
 
+	<xsl:template match="/game:message[game:event = 'game.validEventsChanged']">
+		<xsl:apply-templates select="game:content/game:validEvents" />
+	</xsl:template>
+	<xsl:template match="game:validEvents">
+		<div id="controls">
+			<xsl:apply-templates />
+		</div>
+	</xsl:template><xsl:template match="game:validEvents/game:event" priority="-100" />
 	<xsl:template match="game:validEvents/game:event[text() = 'game.playerJoin']">
 		<input value="Join" type="button">
 			<view:event gameEvent="join" on="click" />
@@ -577,23 +412,30 @@ function enableBoardPanZoom(board, boardContainer) {
 			<view:event on="click" event="startTrade" />
 		</input>
 	</xsl:template>
+	<xsl:template match="game:validEvents/game:event[text() = 'board.clearTrade']">
+		<input value="Clear Trade" type="button">
+			<view:event on="click" event="clearTrade" />
+		</input>
+	</xsl:template>
 	<xsl:template match="game:validEvents/game:event[text() = 'board.endTrade']">
 		<input value="End Trade" type="button">
 			<view:event on="click" event="endTrade" />
 		</input>
 	</xsl:template>
 	
-	<xsl:template match="game:validEvents/game:event" priority="-100" />
-
-
-	<xsl:template match="game:validEvents">
-		<div id="controls">
-			<xsl:apply-templates />
-		</div>
-	</xsl:template>
 	
-	<xsl:template match="/game:message[game:event = 'game.validEventsChanged']">
-		<xsl:apply-templates select="game:content/game:validEvents" />
+
+
+	
+	
+	<xsl:template match="pil:trade">
+		<div>
+			<p>Give</p>
+			<p>Get</p>
+		
+			<xsl:apply-templates select="pil:offer" />
+			<xsl:apply-templates select="pil:bankOffer" />
+		</div>
 	</xsl:template>
 	
 	<xsl:template match="pil:players">
@@ -602,9 +444,7 @@ function enableBoardPanZoom(board, boardContainer) {
 		</ul>
 	</xsl:template>
 	
-	<xsl:template match="/">
-	    <xsl:apply-templates />
-	</xsl:template>
+	
 	
 	<xsl:template match="pil:player">
 		<xsl:variable name="color" select="pil:color" />
@@ -632,10 +472,10 @@ function enableBoardPanZoom(board, boardContainer) {
 		</li>
 	</xsl:template>
 	
-	<xsl:template match="pil:offer">
+	<xsl:template match="pil:offer | pil:bankOffer">
 		<xsl:variable name="col" select="@color" />
 		<div>
-			<xsl:attribute name="class">offer offer-<xsl:value-of select="1+count(../pil:players/pil:player[pil:color = $col]/preceding-sibling::pil:player)" /></xsl:attribute>
+			<xsl:attribute name="class">offer offer-<xsl:value-of select="1+count(../pil:players/pil:player[pil:color = $col]/preceding-sibling::pil:player)" /> <xsl:if test="local-name(.) = 'bankOffer'">bankOffer</xsl:if></xsl:attribute>
 			
 			<ul class="resource-list">
 				<xsl:apply-templates select="pil:resource">
@@ -651,10 +491,15 @@ function enableBoardPanZoom(board, boardContainer) {
 				<xsl:attribute name="event">
 					<xsl:choose>
 						<xsl:when test="local-name(..) = 'offer'">offerResourceClick</xsl:when>
+						<xsl:when test="local-name(..) = 'bankOffer'">bankOfferResourceClick</xsl:when>
 						<xsl:otherwise>resourceClick</xsl:otherwise>
 					</xsl:choose>
 				</xsl:attribute>
 				
+				<xsl:if test="local-name(..) = 'offer'">
+					<pil:playerColor color="{../@color" />
+				</xsl:if>
+								
 				<pil:resource type="{@type}" />
 			</view:event>
 			
@@ -668,9 +513,7 @@ function enableBoardPanZoom(board, boardContainer) {
 		</xsl:apply-templates>
 	</xsl:template>
 	
-	<xsl:template match="/game:message[game:event = 'game.playerJoin' or game:event = 'board.resourcesDistributed']">
-		<xsl:apply-templates select="$meta-doc//game:mostRecentState//pil:players" />
-	</xsl:template>
+	
 	
 	<xsl:template match="pil:dice">
 		<div>
@@ -682,38 +525,27 @@ function enableBoardPanZoom(board, boardContainer) {
 		</div>	
 	</xsl:template>
 	
-	<xsl:template match="/game:message[game:event = 'board.diceRolled']">
-		<xsl:apply-templates select="game:content/pil:dice" />
-	</xsl:template>
+	
 	
 		
-	<xsl:template name="board">
-		<svg:g id="board">
-			<xsl:apply-templates select="pil:polys" />
-			<xsl:apply-templates select="pil:edges" />
-			<xsl:apply-templates select="pil:ports" />
-			<xsl:apply-templates select="pil:verteces" />
-			<script type="text/javascript">			
-				setTimeout(function() {
-					enableBoardPanZoom(document.getElementById("board"), document.getElementById("boardDiv"));
-				}, 100);
-			</script>
+	<xsl:template name="fourtooneport">
+		<xsl:variable name="x">0</xsl:variable>
+		<xsl:variable name="y">0</xsl:variable>
+		
+		<xsl:variable name="cx"><xsl:call-template name="cx"><xsl:with-param name="nx" select="$x" /></xsl:call-template></xsl:variable>
+		<xsl:variable name="cy"><xsl:call-template name="cy"><xsl:with-param name="ny" select="$y" /></xsl:call-template></xsl:variable>
+	
+		<svg:g class="port-marker port-any">
+			<svg:circle class="port-mark" cx="{$cx}" cy="{$cy}" r="{$edgeLength * 0.2}" />
+			<svg:text transform="matrix(1,0,0,1, {$cx}, {$cy})">4:1</svg:text>
+			
+			<svg:circle class="port-hit-area" cx="{$cx}" cy="{$cy}" r="{$edgeLength * 0.3}">
+				<view:event on="click" event="portFourToOneClick" />
+			</svg:circle>
 		</svg:g>
 	</xsl:template>
 	
-	<xsl:template match="/game:message[game:event = 'game.startGame']">
-		<svg:g id="board">
-			<xsl:apply-templates select="$meta-doc/game:game/game:mostRecentState//scxml:data[@name='state']/pil:board/pil:polys" />
-			<xsl:apply-templates select="$meta-doc/game:game/game:mostRecentState//scxml:data[@name='state']/pil:board/pil:edges" />
-			<xsl:apply-templates select="$meta-doc/game:game/game:mostRecentState//scxml:data[@name='state']/pil:board/pil:ports" />
-			<xsl:apply-templates select="$meta-doc/game:game/game:mostRecentState//scxml:data[@name='state']/pil:board/pil:verteces" />
-			<script type="text/javascript">			
-				setTimeout(function() {
-					enableBoardPanZoom(document.getElementById("board"), document.getElementById("boardDiv"));
-				}, 100);
-			</script>
-		</svg:g>
-	</xsl:template>
+	
 	
 	
 	<xsl:template match="pil:ports">
@@ -909,15 +741,7 @@ function enableBoardPanZoom(board, boardContainer) {
 		</svg:g>
 	</xsl:template>
 	
-	<xsl:template match="/game:message[game:event = 'board.placeVertexDevelopment']">
-		<xsl:variable name="dev">
-			<pil:vertex x="{game:param[@name = 'x']}" y="{game:param[@name = 'y']}"> 
-				<pil:development type="{game:param[@name = 'type']}" color="{game:param[@name = 'color']}" />
-			</pil:vertex>
-		</xsl:variable>
-		
-		<xsl:apply-templates select="ex:node-set($dev)/pil:vertex/pil:development" />
-	</xsl:template>
+	
 	
 	<xsl:template match="pil:development">
 		<xsl:choose>
@@ -988,15 +812,7 @@ function enableBoardPanZoom(board, boardContainer) {
 	</xsl:template>
 	
 	
-	<xsl:template match="/game:message[game:event = 'board.placeEdgeDevelopment']">
-		<xsl:variable name="dev">
-			<pil:edge x1="{game:param[@name = 'x1']}" y1="{game:param[@name = 'y1']}" x2="{game:param[@name = 'x2']}" y2="{game:param[@name = 'y2']}"> 
-				<pil:development type="{game:param[@name = 'type']}" color="{game:param[@name = 'color']}" />
-			</pil:edge>
-		</xsl:variable>
-		
-		<xsl:apply-templates select="ex:node-set($dev)/pil:edge/pil:development" />
-	</xsl:template>
+	
 	
 	
 	<xsl:template match="pil:polys">
@@ -1108,6 +924,240 @@ function enableBoardPanZoom(board, boardContainer) {
 		</xsl:if>
 	</xsl:template>
 	
+	<xsl:template name="scripts">
+		<script type="text/javascript"><![CDATA[
+
+function getCookie(c_name)
+{
+	var i,x,y,ARRcookies=document.cookie.split(";");
+	for (i=0;i<ARRcookies.length;i++) {
+		x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+		y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+		x=x.replace(/^\s+|\s+$/g,"");
+		if (x==c_name) {
+			return unescape(y);
+		}
+	}
+}
+
+function setCookie(c_name,value,exdays)
+{
+	var exdate=new Date();
+	exdate.setDate(exdate.getDate() + exdays);
+	var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
+	document.cookie=c_name + "=" + c_value;
+}
+
+
+function enableBoardPanZoom(board, boardContainer) {
+	var trans = new Transform2d();	
+	
+	var t = getCookie("pilgrims-board-transform");
+	if(t) {
+		trans = Transform2d.fromJSON(t);
+		board.setAttribute("transform", trans.toSVG());
+		
+	}
+	
+	var blocker = document.createElement("div");
+	blocker.setAttribute("style", "position:absolute;top:0px;left:0px;height:100%;width:100%;");
+	
+	blocker.addEventListener("mouseup", mouseout, false);
+	blocker.addEventListener("mouseout", mouseout, false);
+	blocker.addEventListener("mousemove", mousemove, false);
+	//blocker.addEventListener("mousedown", mousedown, false);
+	
+	var mousedown_ = false;
+	var pageX_ = 0;
+	var pageY_ = 0;
+	
+	var blockerDiv = null;
+	
+	var mousemove = function(e) {
+		if(mousedown_) {
+			//console.log("move(" + e.pageX + "," + e.pageY + ")");
+			move(e.pageX, e.pageY);	
+			
+			e.preventDefault();
+			e.stopPropagation();	
+		}	
+	}
+	var mouseout = function(e) {
+		if(mousedown_) {
+			//console.log("stop(" + e.pageX + "," + e.pageY + ")");
+			move(e.pageX, e.pageY);
+			stopmove();
+			e.preventDefault();
+			e.stopPropagation();
+			
+			mousedown_ = false;
+		}	
+	}
+	var mousedown = function(e) {
+		//console.log("mousedown: " + e.which);
+		
+		if(e.which == 2) {
+			mousedown_ = true;
+			//console.log("start(" + e.pageX + "," + e.pageY + ")");
+			startmove(e.pageX, e.pageY);
+			
+			e.preventDefault();
+			e.stopPropagation();
+			e.cancelBubble = false;
+			return false;
+		}	
+	}
+	
+	var stopmove = function() {
+		document.body.removeChild(blocker);
+		console.log(trans.toJSON());
+		
+		setCookie("pilgrims-board-transform", trans.toJSON(), 1);
+	}
+	var startmove = function(pageX, pageY) {
+		document.body.appendChild(blocker);
+		
+		pageX_ = pageX;
+		pageY_ = pageY;
+	}
+	var move = function(pageX, pageY) {
+		//$(".chat-window").append("<p>px,py " + pageX + "," + pageY + "</p>");
+		//$(".chat-window").append("<p>epx,epy " + e.pageX + "," + e.pageY + "</p>");
+		
+		var x = pageX - pageX_;
+		var y = pageY - pageY_;
+		
+
+		//var vec = trans.transformFrom([x,y]);
+		
+		trans.translate(x,y);
+		
+		//console.log("transform: " + trans.toSVG());
+		board.setAttribute("transform", trans.toSVG());
+					
+		
+		pageX_ = pageX;
+		pageY_ = pageY;
+	}
+	
+	
+	var zoom = function(scale, pageX, pageY) {
+		var x = pageX - board.parentNode.parentNode.clientLeft;
+		var y = pageY - board.parentNode.parentNode.clientTop;
+					
+		
+		trans.translate(-x, -y).scale(scale).translate(x,y);
+		
+		/*
+		
+		$(".chat-window").append("<p>pos " + pos.left + "," + pos.top + "</p>");
+		$(".chat-window").append("<p>e " + e.pageX + "," + e.pageY + "</p>");
+		$(".chat-window").append("<p>x,y " + x + "," + y + "</p>");
+		$(".chat-window").append("<p>dx,dy " + dx + "," + dy + "</p>");
+		$(".chat-window").append("<p>x0,y0 " + vec0[0] + "," + vec0[1] + "</p>");
+		
+		var vec0 = trans.transformFrom([0,0]);
+		var vec1 = trans.transformFrom([x,y]);
+		
+		var dx = vec1[0] - vec0[0];
+		var dy = vec1[1] - vec0[1];
+		
+		var vec2 = trans.transformFrom([dx, dy]);
+		
+		trans.translate(vec2[0],vec2[1]);
+		*/
+		
+		board.setAttribute("transform", trans.toSVG());
+		setCookie("pilgrims-board-transform", trans.toJSON(), 1);
+	}
+
+	var mousewheel = function(e) {		
+		var delta = 0;
+		if(e.detail) {
+			delta = -e.detail/3;
+		}
+		else if(e.wheelDeltaY) {
+			delta = -e.wheelDeltaY/360;
+		}
+		
+		if(delta != 0) {
+			var scale = Math.pow(1.1, delta);
+			
+			zoom(scale, e.pageX, e.pageY);
+		}
+		
+		if (e.preventDefault)
+	        e.preventDefault();
+		e.returnValue = false;
+	}
+	
+	var touchstart = function(e) {
+		e.preventDefault();
+		if(e.touches.length == 1) {
+			startmove(e.touches[0].pageX, e.touches[0].pageY);
+		}
+	}
+	var touchmove = function(e) {
+		e.preventDefault();
+		if(e.touches.length == 1) {
+			move(e.touches[0].pageX, e.touches[0].pageY);
+		}
+		
+	}
+	var touchend = function(e) {
+		e.preventDefault();
+		if(e.touches.length == 1) {
+			move(e.touches[0].pageX, e.touches[0].pageY);
+			stopmove();
+		}
+		
+	}
+	var touchcancel = function(e) {
+		
+	}
+	
+	var moztouchstart = function(e) {
+		e.preventDefault();
+		startmove(e.pageX, e.pageY);
+	}
+	var moztouchmove = function(e) {
+		e.preventDefault();
+		move(e.pageX, e.pageY);
+	}
+	var moztouchend = function(e) {
+		e.preventDefault();
+		move(e.pageX, e.pageY);
+		stopmove();
+	}
+	
+    if(window.addEventListener) {
+    	window.addEventListener('DOMMouseScroll', mousewheel, false);
+    	window.addEventListener('mousewheel', mousewheel, false);
+    }
+    
+    if(document.addEventListener) {
+    	document.addEventListener('touchstart', touchstart, false);
+    	document.addEventListener('touchmove', touchmove, false);
+    	document.addEventListener('touchend', touchend, false);
+    	document.addEventListener('touchcancel', touchcancel, false);
+    	
+    	document.addEventListener('MozTouchDown', moztouchstart, false);
+    	document.addEventListener('MozTouchMove', moztouchmove, false);
+    	document.addEventListener('MozTouchUp', moztouchend, false);
+    	
+    	document.addEventListener('mousedown', mousedown, false);
+    	document.addEventListener('mouseup', mouseout, false);
+    	//document.addEventListener('mouseout', mouseout, false);
+    	document.addEventListener('mousemove', mousemove, false);
+    	document.addEventListener('click', function(e) {
+    		console.log("document onclick");
+    		if(e.which == 2) e.preventDefault();
+    	}, false);
+    }
+}
+					
+				]]></script>
+	</xsl:template>
 	
 	<xsl:template name="styles">
 		@font-face {

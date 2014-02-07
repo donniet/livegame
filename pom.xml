@@ -154,6 +154,10 @@
 			            <jvmFlag>-Xdebug</jvmFlag>
 			            <jvmFlag>-Xrunjdwp:transport=dt_socket,address=1044,server=y,suspend=y
 			            </jvmFlag>
+			            <jvmFlag>-XX:+CMSClassUnloadingEnabled</jvmFlag>
+			            <jvmFlag>-XX:+CMSPermGenSweepingEnabled</jvmFlag>
+			            <jvmFlag>-XX:PermSize=512m</jvmFlag>
+			            <jvmFlag>-XX:MaxPermSize=512m</jvmFlag>
 			        </jvmFlags>
 			        <disableUpdateCheck>true</disableUpdateCheck>
 			    </configuration>

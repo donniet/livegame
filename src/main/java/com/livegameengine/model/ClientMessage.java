@@ -195,6 +195,10 @@ public class ClientMessage implements Scriptable, XmlSerializable {
 	
 	// returns either String or Node (or null)
 	public Object getContent() {
+		if(content == null || content.getBytes() == null || content.getBytes().length == 0) {
+			return null;
+		}
+		
 		try {
 			Document doc = config_.newXmlDocument();
 			Transformer trans = config_.newTransformer();
