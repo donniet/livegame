@@ -36,12 +36,15 @@ import org.apache.commons.scxml.model.SCXML;
 import org.apache.commons.scxml.model.State;
 import org.apache.commons.scxml.model.Transition;
 import org.apache.commons.scxml.model.TransitionTarget;
+
 import com.livegameengine.config.Config;
 import com.livegameengine.error.GameLoadException;
 import com.livegameengine.persist.PMF;
 import com.livegameengine.scxml.js.JsContext;
 import com.livegameengine.scxml.js.JsEvaluator;
 import com.livegameengine.scxml.js.JsFunctionJsonTransformer;
+import com.livegameengine.scxml.js.SendEventJSFunction;
+import com.livegameengine.scxml.js.SendWatcherEventJsFunction;
 import com.livegameengine.scxml.model.CompleteGame;
 import com.livegameengine.scxml.model.Error;
 import com.livegameengine.scxml.model.FlagStateAsImportant;
@@ -256,7 +259,9 @@ public class Game implements Scriptable, EventDispatcher, SCXMLListener, XmlSeri
 		exec.setStateMachine(scxml);
 		
 		cxt = (JsContext)exec.getRootContext();
-		cxt.set("game", this);		
+		cxt.set("game", this);	
+		cxt.set("send", new SendEventJSFunction(this));
+		cxt.set("sendWatcherEvent", new SendWatcherEventJsFunction(this));
 		
 		try {
 			GameState gs = null;

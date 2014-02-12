@@ -215,6 +215,8 @@ public class GameTransformer extends Transformer {
 			}
 		}
 		
+		frontendTrans.setParameter("playerId", gameUser_.getHashedUserId());
+		
 		
 		//frontendTrans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
 				

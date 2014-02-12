@@ -1,0 +1,2074 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN" "http://www.w3.org/2002/04/xhtml-math-svg/xhtml-math-svg.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:pil="http://www.livegameengine.com/schemas/pilgrims.xsd" xmlns:svg="http://www.w3.org/2000/svg" xmlns:view="http://www.livegameengine.com/schemas/view.xsd">
+<head>
+<script src="/client/0.2/event.js" type="text/javascript"></script>
+<script src="/client/0.2/view.js" type="text/javascript"></script><style type="text/css"></style>
+<script type="text/javascript"><![CDATA[
+				View.setClientMessageChannelUrl("message");
+				View.setServerLoadTime("2014-02-08T23:28:52.607GMT");
+				View.setEventEndpoint({ "url": "event/{event}", "method":"POST" });
+				View.setGameEventEndpoint({ "url": "{gameEvent}", "method":"POST" });
+				View.setGameViewNamespace("http://www.livegameengine.com/schemas/view.xsd");
+				View.setGameNamespace("http://www.livegameengine.com/schemas/game.xsd");
+			]]></script>
+<title>Live Game Engine - Pilgrims of Natac</title>
+<style type="text/css">
+		@font-face {
+			font-family: "Fanwood";
+			src: url("/client/0.2/fonts/Fanwood.otf");
+		}
+		
+		#error-display {
+			position:absolute;
+			left:10%;
+			right:10%;
+			top:20px;
+			height:30px;
+			background:rgba(255,0,0,0.2);
+			text-align:center;
+		}
+		.hide-error {
+			display:none;
+		}
+		.show-error {
+			display:block;
+		}
+	
+		.hex {
+			fill:#F5F5FF;
+			stroke: #CCCCCC;
+			stroke-width:0.5;
+		}
+		.hex-inner {
+			fill: rgba(255,0,0,0.1);
+			stroke: #FF0000;
+			stroke-width: 1px;
+		}
+		.hex-hitarea {
+			fill:#00FF00;
+			opacity:0;
+		}
+		.hex-hitarea:hover {
+			opacity:0.5;
+		}
+		.hexlabel-back {
+			fill:#F5F5FF;
+			stroke:#CCCCCC;
+		}
+		.hexlabel {
+			font-family:"Fanwood", serif;
+			font-size:20px;
+			stroke:#000000;
+			fill:#000000;
+			dominant-baseline:central;
+			text-anchor:middle;
+		}
+		.edge {
+		    fill:rgb(0,255,0);
+		    opacity:0;
+		    stroke:rgb(0,255,0);
+		    stroke-width:1;
+		}
+		.edge:hover {
+		    opacity:0.5;
+		}
+		.vertex {
+		    fill:rgb(0,255,0);
+		    opacity:0;
+		    stroke:#00ff00;
+		    stroke-width:1;
+		}
+		.vertex:hover {
+		    opacity:0.5;
+		}
+		.labelemph {
+			stroke:#FF0000;
+			fill:#FF0000;
+		}
+		.Fields {
+		    fill:#FFEF4F;
+		    stroke:#DDCD2D;
+		    stroke-width:1;
+		}
+		.resource-Grain {
+			background-color: #FFEF4F;
+			color: black;
+		}
+		.Forest {
+		    fill:#00932C;
+		    stroke:#00710A;
+		    stroke-width:1;
+		}
+		.resource-Wood {
+			background-color: #00932C;
+			color: white;
+		}
+		.Pasture {
+		    fill:#BFE882;
+		    stroke:#9DC770;
+		    stroke-width:1;
+		}
+		.resource-Wool {
+			background-color: #BFE882;
+			color: black;
+		}
+		.Hills {
+		    fill:#B22222;
+		    stroke:#900000;
+		    stroke-width:1;
+		}
+		.resource-Brick {
+			background-color: #B22222;
+			color: white;
+		}
+		.Mountains {
+		    fill:#787887;
+		    stroke:#565665;
+		    stroke-width:1;
+		}
+		.resource-Ore {
+			background-color: #787887;
+			color: white;
+		}
+		.Desert {
+		    fill:#fafad2;
+		    stroke:#D8D8B0;
+		    stroke-width:1;
+		}
+		
+		.port-hit-area {
+			fill:#00FF00;
+			opacity:0;
+			stroke:none;
+		}
+		.port-hit-area:hover {
+			opacity:0.5;
+		}
+		.port-anchor {
+			stroke: #000000;
+			stroke-dasharray: 3,2;
+			stroke-width: 2px;
+			fill: none;
+		}
+		.port-marker circle.port-mark {
+			stroke: #000000;
+			stroke-dasharray:none;
+			stroke-width: 2px;
+			fill:none;
+		}
+		.port-marker text {
+			font-family:"Fanwood", serif;
+			font-size:20px;
+			stroke:#000000;
+			fill:#000000;
+			dominant-baseline:central;
+			text-anchor:middle;
+		}
+		.port-marker line {
+			stroke: #000000;
+			stroke-width: 2px;
+			/*marker-end:url(#Triangle);*/
+		}
+		
+		
+		.port-Wool circle.port-mark {
+		    fill: #BFE882;
+		}
+		
+		.port-Wheat circle.port-mark, .port-Grain circle.port-mark {
+		    fill: #FFEF4F;
+		}
+		
+		.port-Wood circle.port-mark {
+		    fill: #00932C;
+		}
+		
+		.port-Ore circle.port-mark {
+		    fill: #787887;
+		}
+		
+		.port-Brick circle.port-mark {
+		    fill: firebrick;
+		}
+		.port-any circle.port-mark {
+			fill: white;
+		}
+		
+		.red {
+			fill: rgb(255,0,0);
+			stroke: black;
+			stroke-width: 1px;
+		}
+		.role-red {
+			color: red;
+		}
+		.green {
+			fill: green;
+			stroke: black;
+			stroke-width: 1px;
+		}
+		.role-green {
+			color: green;
+		}
+		.blue {
+			fill: blue;
+			stroke: black;
+			stroke-width: 1px;
+		}
+		.orange {
+			fill: orange;
+			stroke: black;
+			stroke-width: 1px;
+		}
+		
+		#playersDiv &gt; ul &gt; li {
+			list-style-type: none;
+		}
+		
+		.player img {
+			vertical-align: middle;
+		}
+		
+		.player {
+			position:absolute;
+			top: 5px;
+			bottom: 0px;
+			width: 110px;
+			text-align: left;
+		}
+		.offer {
+			position:absolute;
+			top:50px;
+			height: 50px;
+			width: 110px;
+		}
+		.current-player {
+			background-color:rgba(255, 230, 90, 0.2);
+		}
+		
+		.player-1 {
+			left: 40px;
+		}
+		.offer-1 {
+			left: 115px;
+		}
+		.player-2 {
+			left: 150px;
+		}
+		.offer-2 {
+			left: 225px;
+		}
+		.player-3 {
+			left: 260px;
+		}
+		.offer-3 {
+			left: 370px;
+		}
+		.player-4 {
+			left: 370px;
+		}
+		.offer-4 {
+			left: 480px;
+		}
+		
+		#playersDiv {
+			font-family: Fanwood, Serif;
+		}
+		.role-red {
+			color: red;
+		}
+		
+		.resource-list {
+			padding: 0px;
+			margin: 5px;
+		}
+		
+		.resource-list &gt; li {
+			list-style-type:none;
+			float: left;
+			
+			border: solid 1px black;
+			border-radius: 4px;
+			display:block;
+			width: 15px;
+			height: 22px;
+			text-align: center;
+			padding-top: 3px;
+			font-weight: bold;
+		}
+		
+		
+		#boardDiv {
+			position:absolute;
+			top:0;
+			left:0;
+			right:0;
+			bottom:100px;
+			z-index: -100;
+		}
+		#tradeDiv {
+			position:absolute;
+			background: rgba(0,0,255,0.2);
+			left:0;
+			right:0;
+			height:0;
+			bottom:100px;
+			overflow:hidden;
+			
+			transition: all 0.25s ease-in-out;
+		}
+		#hud {
+			position:absolute;
+			height:100px;
+			bottom:0;
+			left:0;
+			right:0;
+			border-top: solid 2px rgba(0,0,255,0.75);
+			background-color: rgba(0,0,255,0.2);
+		}
+		#controls {
+			position:absolute;
+			left: 0;
+			bottom: 0;
+			width: 75px;
+		}
+		#playersDiv {
+			position:absolute;
+			left:75px;
+			bottom: 0;
+			height: 100px;
+		}
+		/*
+		body {
+			overflow:hidden;
+		}
+		*/
+	</style>
+<script src="/client/0.2/transform2d.js" type="text/javascript"></script>
+<script type="text/javascript"><![CDATA[
+
+function getCookie(c_name)
+{
+	var i,x,y,ARRcookies=document.cookie.split(";");
+	for (i=0;i<ARRcookies.length;i++) {
+		x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+		y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+		x=x.replace(/^\s+|\s+$/g,"");
+		if (x==c_name) {
+			return unescape(y);
+		}
+	}
+}
+
+function setCookie(c_name,value,exdays)
+{
+	var exdate=new Date();
+	exdate.setDate(exdate.getDate() + exdays);
+	var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
+	document.cookie=c_name + "=" + c_value;
+}
+
+
+function enableBoardPanZoom(board, boardContainer) {
+	var trans = new Transform2d();	
+	
+	var t = getCookie("pilgrims-board-transform");
+	if(t) {
+		trans = Transform2d.fromJSON(t);
+		board.setAttribute("transform", trans.toSVG());
+		
+	}
+	
+	var blocker = document.createElement("div");
+	blocker.setAttribute("style", "position:absolute;top:0px;left:0px;height:100%;width:100%;");
+	
+	blocker.addEventListener("mouseup", mouseout, false);
+	blocker.addEventListener("mouseout", mouseout, false);
+	blocker.addEventListener("mousemove", mousemove, false);
+	//blocker.addEventListener("mousedown", mousedown, false);
+	
+	var mousedown_ = false;
+	var pageX_ = 0;
+	var pageY_ = 0;
+	
+	var blockerDiv = null;
+	
+	var mousemove = function(e) {
+		if(mousedown_) {
+			//console.log("move(" + e.pageX + "," + e.pageY + ")");
+			move(e.pageX, e.pageY);	
+			
+			e.preventDefault();
+			e.stopPropagation();	
+		}	
+	}
+	var mouseout = function(e) {
+		if(mousedown_) {
+			//console.log("stop(" + e.pageX + "," + e.pageY + ")");
+			move(e.pageX, e.pageY);
+			stopmove();
+			e.preventDefault();
+			e.stopPropagation();
+			
+			mousedown_ = false;
+		}	
+	}
+	var mousedown = function(e) {
+		//console.log("mousedown: " + e.which);
+		
+		if(e.which == 2) {
+			mousedown_ = true;
+			//console.log("start(" + e.pageX + "," + e.pageY + ")");
+			startmove(e.pageX, e.pageY);
+			
+			e.preventDefault();
+			e.stopPropagation();
+			e.cancelBubble = false;
+			return false;
+		}	
+	}
+	
+	var stopmove = function() {
+		document.body.removeChild(blocker);
+		console.log(trans.toJSON());
+		
+		setCookie("pilgrims-board-transform", trans.toJSON(), 1);
+	}
+	var startmove = function(pageX, pageY) {
+		document.body.appendChild(blocker);
+		
+		pageX_ = pageX;
+		pageY_ = pageY;
+	}
+	var move = function(pageX, pageY) {
+		//$(".chat-window").append("<p>px,py " + pageX + "," + pageY + "</p>");
+		//$(".chat-window").append("<p>epx,epy " + e.pageX + "," + e.pageY + "</p>");
+		
+		var x = pageX - pageX_;
+		var y = pageY - pageY_;
+		
+
+		//var vec = trans.transformFrom([x,y]);
+		
+		trans.translate(x,y);
+		
+		//console.log("transform: " + trans.toSVG());
+		board.setAttribute("transform", trans.toSVG());
+					
+		
+		pageX_ = pageX;
+		pageY_ = pageY;
+	}
+	
+	
+	var zoom = function(scale, pageX, pageY) {
+		var x = pageX - board.parentNode.parentNode.clientLeft;
+		var y = pageY - board.parentNode.parentNode.clientTop;
+					
+		
+		trans.translate(-x, -y).scale(scale).translate(x,y);
+		
+		/*
+		
+		$(".chat-window").append("<p>pos " + pos.left + "," + pos.top + "</p>");
+		$(".chat-window").append("<p>e " + e.pageX + "," + e.pageY + "</p>");
+		$(".chat-window").append("<p>x,y " + x + "," + y + "</p>");
+		$(".chat-window").append("<p>dx,dy " + dx + "," + dy + "</p>");
+		$(".chat-window").append("<p>x0,y0 " + vec0[0] + "," + vec0[1] + "</p>");
+		
+		var vec0 = trans.transformFrom([0,0]);
+		var vec1 = trans.transformFrom([x,y]);
+		
+		var dx = vec1[0] - vec0[0];
+		var dy = vec1[1] - vec0[1];
+		
+		var vec2 = trans.transformFrom([dx, dy]);
+		
+		trans.translate(vec2[0],vec2[1]);
+		*/
+		
+		board.setAttribute("transform", trans.toSVG());
+		setCookie("pilgrims-board-transform", trans.toJSON(), 1);
+	}
+
+	var mousewheel = function(e) {		
+		var delta = 0;
+		if(e.detail) {
+			delta = -e.detail/3;
+		}
+		else if(e.wheelDeltaY) {
+			delta = -e.wheelDeltaY/360;
+		}
+		
+		if(delta != 0) {
+			var scale = Math.pow(1.1, delta);
+			
+			zoom(scale, e.pageX, e.pageY);
+		}
+		
+		if (e.preventDefault)
+	        e.preventDefault();
+		e.returnValue = false;
+	}
+	
+	var touchstart = function(e) {
+		e.preventDefault();
+		if(e.touches.length == 1) {
+			startmove(e.touches[0].pageX, e.touches[0].pageY);
+		}
+	}
+	var touchmove = function(e) {
+		e.preventDefault();
+		if(e.touches.length == 1) {
+			move(e.touches[0].pageX, e.touches[0].pageY);
+		}
+		
+	}
+	var touchend = function(e) {
+		e.preventDefault();
+		if(e.touches.length == 1) {
+			move(e.touches[0].pageX, e.touches[0].pageY);
+			stopmove();
+		}
+		
+	}
+	var touchcancel = function(e) {
+		
+	}
+	
+	var moztouchstart = function(e) {
+		e.preventDefault();
+		startmove(e.pageX, e.pageY);
+	}
+	var moztouchmove = function(e) {
+		e.preventDefault();
+		move(e.pageX, e.pageY);
+	}
+	var moztouchend = function(e) {
+		e.preventDefault();
+		move(e.pageX, e.pageY);
+		stopmove();
+	}
+	
+    if(window.addEventListener) {
+    	window.addEventListener('DOMMouseScroll', mousewheel, false);
+    	window.addEventListener('mousewheel', mousewheel, false);
+    }
+    
+    if(document.addEventListener) {
+    	document.addEventListener('touchstart', touchstart, false);
+    	document.addEventListener('touchmove', touchmove, false);
+    	document.addEventListener('touchend', touchend, false);
+    	document.addEventListener('touchcancel', touchcancel, false);
+    	
+    	document.addEventListener('MozTouchDown', moztouchstart, false);
+    	document.addEventListener('MozTouchMove', moztouchmove, false);
+    	document.addEventListener('MozTouchUp', moztouchend, false);
+    	
+    	document.addEventListener('mousedown', mousedown, false);
+    	document.addEventListener('mouseup', mouseout, false);
+    	//document.addEventListener('mouseout', mouseout, false);
+    	document.addEventListener('mousemove', mousemove, false);
+    	document.addEventListener('click', function(e) {
+    		console.log("document onclick");
+    		if(e.which == 2) e.preventDefault();
+    	}, false);
+    }
+}
+					
+				]]></script>
+</head>
+<body>
+
+
+<span class="hide-error" id="error-display"></span>
+<div id="diceDiv">
+<div>
+<img height="50" src="/client/0.2/i/Dice-3.svg" width="50">
+
+</img>
+<img height="50" src="/client/0.2/i/Dice-4.svg" width="50">
+
+</img>
+</div>
+
+</div>
+<div id="boardDiv">
+<svg:svg baseProfile="full" height="100%" id="boardSvg" version="1.1" width="100%">
+<svg:g id="board" transform="matrix(1,0,0,1,268,-101)">
+<svg:g>
+<svg:polygon class="hex" points="93.50000000000001 184.03039830325 178.5 184.03039830325 221 257.64255762455 178.5 331.25471694585 93.50000000000001 331.25471694585 51 257.64255762455 "/>
+<svg:polygon class="hex-inner Mountains" points="97.75000000000001 191.39161423538 174.25 191.39161423538 212.5 257.64255762455 174.25 323.89350101372 97.75000000000001 323.89350101372 59.5 257.64255762455 "/>
+<svg:circle class="hexlabel-back" cx="136" cy="257.64255762455" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="136" y="253.64255762455002">5</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="124.66666666666667" y="264.64255762455">
+<svg:circle class="hit" cx="20" cy="10" r="8"/>
+<svg:circle class="hit" cx="40" cy="10" r="8"/>
+<svg:circle class="hit" cx="60" cy="10" r="8"/>
+<svg:circle class="hit" cx="80" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="93.50000000000001 184.03039830325 178.5 184.03039830325 221 257.64255762455 178.5 331.25471694585 93.50000000000001 331.25471694585 51 257.64255762455 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="221 110.41823898195 306 110.41823898195 348.49999999999994 184.03039830325 306 257.64255762455 221 257.64255762455 178.5 184.03039830325 "/>
+<svg:polygon class="hex-inner Fields" points="225.25 117.77945491407999 301.75 117.77945491407999 339.99999999999994 184.03039830325 301.75 250.28134169242003 225.25 250.28134169242003 187 184.03039830325 "/>
+<svg:circle class="hexlabel-back" cx="263.5" cy="184.03039830325002" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="263.5" y="180.03039830325002">2</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="252.16666666666666" y="191.03039830325002">
+<svg:circle class="hit" cx="50" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="221 110.41823898195 306 110.41823898195 348.49999999999994 184.03039830325 306 257.64255762455 221 257.64255762455 178.5 184.03039830325 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="348.49999999999994 36.80607966065 433.49999999999994 36.80607966065 475.99999999999994 110.41823898195 433.49999999999994 184.03039830325 348.49999999999994 184.03039830325 306 110.41823898195 "/>
+<svg:polygon class="hex-inner Forest" points="352.74999999999994 44.16729559277999 429.24999999999994 44.16729559277999 467.49999999999994 110.41823898195 429.24999999999994 176.66918237112 352.74999999999994 176.66918237112 314.5 110.41823898195 "/>
+<svg:circle class="hexlabel-back" cx="390.99999999999994" cy="110.41823898195" r="22.666666666666668"/>
+<svg:text class="hexlabel labelemph" x="390.99999999999994" y="106.41823898195">6</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="379.66666666666663" y="117.41823898195">
+<svg:circle class="hit" cx="10" cy="10" r="8"/>
+<svg:circle class="hit" cx="30" cy="10" r="8"/>
+<svg:circle class="hit" cx="50" cy="10" r="8"/>
+<svg:circle class="hit" cx="70" cy="10" r="8"/>
+<svg:circle class="hit" cx="90" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="348.49999999999994 36.80607966065 433.49999999999994 36.80607966065 475.99999999999994 110.41823898195 433.49999999999994 184.03039830325 348.49999999999994 184.03039830325 306 110.41823898195 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="475.99999999999994 110.41823898195 561 110.41823898195 603.5 184.03039830325 561 257.64255762455 475.99999999999994 257.64255762455 433.49999999999994 184.03039830325 "/>
+<svg:polygon class="hex-inner Pasture" points="480.24999999999994 117.77945491407999 556.75 117.77945491407999 595 184.03039830325 556.75 250.28134169242003 480.24999999999994 250.28134169242003 441.99999999999994 184.03039830325 "/>
+<svg:circle class="hexlabel-back" cx="518.5" cy="184.03039830325002" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="518.5" y="180.03039830325002">3</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="507.1666666666667" y="191.03039830325002">
+<svg:circle class="hit" cx="40" cy="10" r="8"/>
+<svg:circle class="hit" cx="60" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="475.99999999999994 110.41823898195 561 110.41823898195 603.5 184.03039830325 561 257.64255762455 475.99999999999994 257.64255762455 433.49999999999994 184.03039830325 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="603.5 184.03039830325 688.5 184.03039830325 731 257.64255762455 688.5 331.25471694585 603.5 331.25471694585 561 257.64255762455 "/>
+<svg:polygon class="hex-inner Fields" points="607.75 191.39161423538 684.25 191.39161423538 722.5 257.64255762455 684.25 323.89350101372 607.75 323.89350101372 569.5 257.64255762455 "/>
+<svg:circle class="hexlabel-back" cx="646" cy="257.64255762455" r="22.666666666666668"/>
+<svg:text class="hexlabel labelemph" x="646" y="253.64255762455002">8</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="634.6666666666666" y="264.64255762455">
+<svg:circle class="hit" cx="10" cy="10" r="8"/>
+<svg:circle class="hit" cx="30" cy="10" r="8"/>
+<svg:circle class="hit" cx="50" cy="10" r="8"/>
+<svg:circle class="hit" cx="70" cy="10" r="8"/>
+<svg:circle class="hit" cx="90" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="603.5 184.03039830325 688.5 184.03039830325 731 257.64255762455 688.5 331.25471694585 603.5 331.25471694585 561 257.64255762455 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="603.5 331.25471694585 688.5 331.25471694585 731 404.86687626715 688.5 478.47903558845 603.5 478.47903558845 561 404.86687626715 "/>
+<svg:polygon class="hex-inner Pasture" points="607.75 338.61593287798 684.25 338.61593287798 722.5 404.86687626715 684.25 471.11781965632 607.75 471.11781965632 569.5 404.86687626715 "/>
+<svg:circle class="hexlabel-back" cx="646" cy="404.86687626715" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="646" y="400.86687626715">10</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="634.6666666666666" y="411.86687626715">
+<svg:circle class="hit" cx="30" cy="10" r="8"/>
+<svg:circle class="hit" cx="50" cy="10" r="8"/>
+<svg:circle class="hit" cx="70" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="603.5 331.25471694585 688.5 331.25471694585 731 404.86687626715 688.5 478.47903558845 603.5 478.47903558845 561 404.86687626715 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="603.5 478.47903558845 688.5 478.47903558845 731 552.09119490975 688.5 625.7033542310501 603.5 625.7033542310501 561 552.09119490975 "/>
+<svg:polygon class="hex-inner Hills" points="607.75 485.84025152058 684.25 485.84025152058 722.5 552.09119490975 684.25 618.3421382989201 607.75 618.3421382989201 569.5 552.09119490975 "/>
+<svg:circle class="hexlabel-back" cx="646" cy="552.09119490975" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="646" y="548.09119490975">9</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="634.6666666666666" y="559.09119490975">
+<svg:circle class="hit" cx="20" cy="10" r="8"/>
+<svg:circle class="hit" cx="40" cy="10" r="8"/>
+<svg:circle class="hit" cx="60" cy="10" r="8"/>
+<svg:circle class="hit" cx="80" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="603.5 478.47903558845 688.5 478.47903558845 731 552.09119490975 688.5 625.7033542310501 603.5 625.7033542310501 561 552.09119490975 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="475.99999999999994 552.09119490975 561 552.09119490975 603.5 625.7033542310501 561 699.31551355235 475.99999999999994 699.31551355235 433.49999999999994 625.7033542310501 "/>
+<svg:polygon class="hex-inner Forest" points="480.24999999999994 559.45241084188 556.75 559.45241084188 595 625.7033542310501 556.75 691.95429762022 480.24999999999994 691.95429762022 441.99999999999994 625.7033542310501 "/>
+<svg:circle class="hexlabel-back" cx="518.5" cy="625.7033542310501" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="518.5" y="621.7033542310501">12</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="507.1666666666667" y="632.7033542310501">
+<svg:circle class="hit" cx="50" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="475.99999999999994 552.09119490975 561 552.09119490975 603.5 625.7033542310501 561 699.31551355235 475.99999999999994 699.31551355235 433.49999999999994 625.7033542310501 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="348.49999999999994 625.7033542310501 433.49999999999994 625.7033542310501 475.99999999999994 699.31551355235 433.49999999999994 772.92767287365 348.49999999999994 772.92767287365 306 699.31551355235 "/>
+<svg:polygon class="hex-inner Desert" points="352.74999999999994 633.0645701631801 429.24999999999994 633.0645701631801 467.49999999999994 699.31551355235 429.24999999999994 765.56645694152 352.74999999999994 765.56645694152 314.5 699.31551355235 "/>
+<svg:polygon class="hex-hitarea" points="348.49999999999994 625.7033542310501 433.49999999999994 625.7033542310501 475.99999999999994 699.31551355235 433.49999999999994 772.92767287365 348.49999999999994 772.92767287365 306 699.31551355235 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="221 552.09119490975 306 552.09119490975 348.49999999999994 625.7033542310501 306 699.31551355235 221 699.31551355235 178.5 625.7033542310501 "/>
+<svg:polygon class="hex-inner Forest" points="225.25 559.45241084188 301.75 559.45241084188 339.99999999999994 625.7033542310501 301.75 691.95429762022 225.25 691.95429762022 187 625.7033542310501 "/>
+<svg:circle class="hexlabel-back" cx="263.5" cy="625.7033542310501" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="263.5" y="621.7033542310501">11</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="252.16666666666666" y="632.7033542310501">
+<svg:circle class="hit" cx="40" cy="10" r="8"/>
+<svg:circle class="hit" cx="60" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="221 552.09119490975 306 552.09119490975 348.49999999999994 625.7033542310501 306 699.31551355235 221 699.31551355235 178.5 625.7033542310501 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="93.50000000000001 478.47903558845 178.5 478.47903558845 221 552.09119490975 178.5 625.7033542310501 93.50000000000001 625.7033542310501 51 552.09119490975 "/>
+<svg:polygon class="hex-inner Fields" points="97.75000000000001 485.84025152058 174.25 485.84025152058 212.5 552.09119490975 174.25 618.3421382989201 97.75000000000001 618.3421382989201 59.5 552.09119490975 "/>
+<svg:circle class="hexlabel-back" cx="136" cy="552.09119490975" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="136" y="548.09119490975">4</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="124.66666666666667" y="559.09119490975">
+<svg:circle class="hit" cx="30" cy="10" r="8"/>
+<svg:circle class="hit" cx="50" cy="10" r="8"/>
+<svg:circle class="hit" cx="70" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="93.50000000000001 478.47903558845 178.5 478.47903558845 221 552.09119490975 178.5 625.7033542310501 93.50000000000001 625.7033542310501 51 552.09119490975 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="93.50000000000001 331.25471694585 178.5 331.25471694585 221 404.86687626715 178.5 478.47903558845 93.50000000000001 478.47903558845 51 404.86687626715 "/>
+<svg:polygon class="hex-inner Forest" points="97.75000000000001 338.61593287798 174.25 338.61593287798 212.5 404.86687626715 174.25 471.11781965632 97.75000000000001 471.11781965632 59.5 404.86687626715 "/>
+<svg:circle class="hexlabel-back" cx="136" cy="404.86687626715" r="22.666666666666668"/>
+<svg:text class="hexlabel labelemph" x="136" y="400.86687626715">8</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="124.66666666666667" y="411.86687626715">
+<svg:circle class="hit" cx="10" cy="10" r="8"/>
+<svg:circle class="hit" cx="30" cy="10" r="8"/>
+<svg:circle class="hit" cx="50" cy="10" r="8"/>
+<svg:circle class="hit" cx="70" cy="10" r="8"/>
+<svg:circle class="hit" cx="90" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="93.50000000000001 331.25471694585 178.5 331.25471694585 221 404.86687626715 178.5 478.47903558845 93.50000000000001 478.47903558845 51 404.86687626715 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="221 257.64255762455 306 257.64255762455 348.49999999999994 331.25471694585 306 404.86687626715 221 404.86687626715 178.5 331.25471694585 "/>
+<svg:polygon class="hex-inner Mountains" points="225.25 265.00377355668 301.75 265.00377355668 339.99999999999994 331.25471694585 301.75 397.50566033502 225.25 397.50566033502 187 331.25471694585 "/>
+<svg:circle class="hexlabel-back" cx="263.5" cy="331.25471694585" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="263.5" y="327.25471694585">10</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="252.16666666666666" y="338.25471694585">
+<svg:circle class="hit" cx="30" cy="10" r="8"/>
+<svg:circle class="hit" cx="50" cy="10" r="8"/>
+<svg:circle class="hit" cx="70" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="221 257.64255762455 306 257.64255762455 348.49999999999994 331.25471694585 306 404.86687626715 221 404.86687626715 178.5 331.25471694585 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="348.49999999999994 184.03039830325 433.49999999999994 184.03039830325 475.99999999999994 257.64255762455 433.49999999999994 331.25471694585 348.49999999999994 331.25471694585 306 257.64255762455 "/>
+<svg:polygon class="hex-inner Fields" points="352.74999999999994 191.39161423538 429.24999999999994 191.39161423538 467.49999999999994 257.64255762455 429.24999999999994 323.89350101372 352.74999999999994 323.89350101372 314.5 257.64255762455 "/>
+<svg:circle class="hexlabel-back" cx="390.99999999999994" cy="257.64255762455" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="390.99999999999994" y="253.64255762455002">9</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="379.66666666666663" y="264.64255762455">
+<svg:circle class="hit" cx="20" cy="10" r="8"/>
+<svg:circle class="hit" cx="40" cy="10" r="8"/>
+<svg:circle class="hit" cx="60" cy="10" r="8"/>
+<svg:circle class="hit" cx="80" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="348.49999999999994 184.03039830325 433.49999999999994 184.03039830325 475.99999999999994 257.64255762455 433.49999999999994 331.25471694585 348.49999999999994 331.25471694585 306 257.64255762455 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="475.99999999999994 257.64255762455 561 257.64255762455 603.5 331.25471694585 561 404.86687626715 475.99999999999994 404.86687626715 433.49999999999994 331.25471694585 "/>
+<svg:polygon class="hex-inner Pasture" points="480.24999999999994 265.00377355668 556.75 265.00377355668 595 331.25471694585 556.75 397.50566033502 480.24999999999994 397.50566033502 441.99999999999994 331.25471694585 "/>
+<svg:circle class="hexlabel-back" cx="518.5" cy="331.25471694585" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="518.5" y="327.25471694585">4</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="507.1666666666667" y="338.25471694585">
+<svg:circle class="hit" cx="30" cy="10" r="8"/>
+<svg:circle class="hit" cx="50" cy="10" r="8"/>
+<svg:circle class="hit" cx="70" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="475.99999999999994 257.64255762455 561 257.64255762455 603.5 331.25471694585 561 404.86687626715 475.99999999999994 404.86687626715 433.49999999999994 331.25471694585 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="475.99999999999994 404.86687626715 561 404.86687626715 603.5 478.47903558845 561 552.09119490975 475.99999999999994 552.09119490975 433.49999999999994 478.47903558845 "/>
+<svg:polygon class="hex-inner Hills" points="480.24999999999994 412.22809219928 556.75 412.22809219928 595 478.47903558845 556.75 544.72997897762 480.24999999999994 544.72997897762 441.99999999999994 478.47903558845 "/>
+<svg:circle class="hexlabel-back" cx="518.5" cy="478.47903558845" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="518.5" y="474.47903558845">5</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="507.1666666666667" y="485.47903558845">
+<svg:circle class="hit" cx="20" cy="10" r="8"/>
+<svg:circle class="hit" cx="40" cy="10" r="8"/>
+<svg:circle class="hit" cx="60" cy="10" r="8"/>
+<svg:circle class="hit" cx="80" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="475.99999999999994 404.86687626715 561 404.86687626715 603.5 478.47903558845 561 552.09119490975 475.99999999999994 552.09119490975 433.49999999999994 478.47903558845 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="348.49999999999994 478.47903558845 433.49999999999994 478.47903558845 475.99999999999994 552.09119490975 433.49999999999994 625.7033542310501 348.49999999999994 625.7033542310501 306 552.09119490975 "/>
+<svg:polygon class="hex-inner Mountains" points="352.74999999999994 485.84025152058 429.24999999999994 485.84025152058 467.49999999999994 552.09119490975 429.24999999999994 618.3421382989201 352.74999999999994 618.3421382989201 314.5 552.09119490975 "/>
+<svg:circle class="hexlabel-back" cx="390.99999999999994" cy="552.09119490975" r="22.666666666666668"/>
+<svg:text class="hexlabel labelemph" x="390.99999999999994" y="548.09119490975">6</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="379.66666666666663" y="559.09119490975">
+<svg:circle class="hit" cx="10" cy="10" r="8"/>
+<svg:circle class="hit" cx="30" cy="10" r="8"/>
+<svg:circle class="hit" cx="50" cy="10" r="8"/>
+<svg:circle class="hit" cx="70" cy="10" r="8"/>
+<svg:circle class="hit" cx="90" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="348.49999999999994 478.47903558845 433.49999999999994 478.47903558845 475.99999999999994 552.09119490975 433.49999999999994 625.7033542310501 348.49999999999994 625.7033542310501 306 552.09119490975 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="221 404.86687626715 306 404.86687626715 348.49999999999994 478.47903558845 306 552.09119490975 221 552.09119490975 178.5 478.47903558845 "/>
+<svg:polygon class="hex-inner Pasture" points="225.25 412.22809219928 301.75 412.22809219928 339.99999999999994 478.47903558845 301.75 544.72997897762 225.25 544.72997897762 187 478.47903558845 "/>
+<svg:circle class="hexlabel-back" cx="263.5" cy="478.47903558845" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="263.5" y="474.47903558845">3</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="252.16666666666666" y="485.47903558845">
+<svg:circle class="hit" cx="40" cy="10" r="8"/>
+<svg:circle class="hit" cx="60" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="221 404.86687626715 306 404.86687626715 348.49999999999994 478.47903558845 306 552.09119490975 221 552.09119490975 178.5 478.47903558845 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:polygon class="hex" points="348.49999999999994 331.25471694585 433.49999999999994 331.25471694585 475.99999999999994 404.86687626715 433.49999999999994 478.47903558845 348.49999999999994 478.47903558845 306 404.86687626715 "/>
+<svg:polygon class="hex-inner Hills" points="352.74999999999994 338.61593287798 429.24999999999994 338.61593287798 467.49999999999994 404.86687626715 429.24999999999994 471.11781965632 352.74999999999994 471.11781965632 314.5 404.86687626715 "/>
+<svg:circle class="hexlabel-back" cx="390.99999999999994" cy="404.86687626715" r="22.666666666666668"/>
+<svg:text class="hexlabel" x="390.99999999999994" y="400.86687626715">11</svg:text>
+<svg:svg height="4.533333333333334px" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 20" width="22.666666666666668px" x="379.66666666666663" y="411.86687626715">
+<svg:circle class="hit" cx="40" cy="10" r="8"/>
+<svg:circle class="hit" cx="60" cy="10" r="8"/>
+</svg:svg>
+<svg:polygon class="hex-hitarea" points="348.49999999999994 331.25471694585 433.49999999999994 331.25471694585 475.99999999999994 404.86687626715 433.49999999999994 478.47903558845 348.49999999999994 478.47903558845 306 404.86687626715 ">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="58.361215932158295 261.89255762456634 100.86121593215832 188.28039830326634 86.13878406784171 179.78039830323365 43.638784067841705 253.39255762453368">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="93.50000000000001 192.53039830325 178.5 192.53039830325 178.5 175.53039830325 93.50000000000001 175.53039830325">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="185.8612159321583 179.78039830323365 228.3612159321583 253.39255762453368 213.6387840678417 261.89255762456634 171.1387840678417 188.28039830326634">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="185.8612159321583 335.50471694586633 228.3612159321583 261.89255762456634 213.6387840678417 253.39255762453368 171.1387840678417 327.0047169458337">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="93.50000000000001 339.75471694585 178.5 339.75471694585 178.5 322.75471694585 93.50000000000001 322.75471694585">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="58.361215932158295 253.39255762453368 100.86121593215832 327.0047169458337 86.13878406784171 335.50471694586633 43.638784067841705 261.89255762456634">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="185.8612159321583 188.28039830326634 228.3612159321583 114.66823898196634 213.6387840678417 106.16823898193365 171.1387840678417 179.78039830323365">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="221 118.91823898195 306 118.91823898195 306 101.91823898195 221 101.91823898195">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="313.3612159321583 106.16823898193367 355.86121593215825 179.78039830323365 341.13878406784164 188.28039830326634 298.6387840678417 114.66823898196633">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="313.3612159321583 261.89255762456634 355.86121593215825 188.28039830326634 341.13878406784164 179.78039830323365 298.6387840678417 253.39255762453368">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="221 266.14255762455 306 266.14255762455 306 249.14255762455002 221 249.14255762455002">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="313.3612159321583 114.66823898196633 355.86121593215825 41.056079660666335 341.13878406784164 32.556079660633664 298.6387840678417 106.16823898193367">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="348.49999999999994 45.30607966065 433.49999999999994 45.30607966065 433.49999999999994 28.30607966065 348.49999999999994 28.30607966065">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="440.86121593215825 32.556079660633664 483.36121593215825 106.16823898193365 468.63878406784164 114.66823898196634 426.13878406784164 41.056079660666335">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="440.86121593215825 188.28039830326634 483.36121593215825 114.66823898196634 468.63878406784164 106.16823898193365 426.13878406784164 179.78039830323365">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="348.49999999999994 192.53039830325 433.49999999999994 192.53039830325 433.49999999999994 175.53039830325 348.49999999999994 175.53039830325">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="475.99999999999994 118.91823898195 561 118.91823898195 561 101.91823898195 475.99999999999994 101.91823898195">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="568.3612159321583 106.16823898193365 610.8612159321583 179.78039830323365 596.1387840678417 188.28039830326634 553.6387840678417 114.66823898196634">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="568.3612159321583 261.89255762456634 610.8612159321583 188.28039830326634 596.1387840678417 179.78039830323365 553.6387840678417 253.39255762453368">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+<svg:polygon class="development road red" points="475.99999999999994 264.44255762455003 561 264.44255762455003 561 250.84255762455 475.99999999999994 250.84255762455"/>
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="475.99999999999994 266.14255762455 561 266.14255762455 561 249.14255762455002 475.99999999999994 249.14255762455002">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="440.86121593215825 179.78039830323365 483.36121593215825 253.39255762453368 468.63878406784164 261.89255762456634 426.13878406784164 188.28039830326634">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="603.5 192.53039830325 688.5 192.53039830325 688.5 175.53039830325 603.5 175.53039830325">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="695.8612159321583 179.78039830323365 738.3612159321583 253.39255762453368 723.6387840678417 261.89255762456634 681.1387840678417 188.28039830326634">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="695.8612159321583 335.50471694586633 738.3612159321583 261.89255762456634 723.6387840678417 253.39255762453368 681.1387840678417 327.0047169458337">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="603.5 339.75471694585 688.5 339.75471694585 688.5 322.75471694585 603.5 322.75471694585">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="568.3612159321583 253.39255762453368 610.8612159321583 327.0047169458337 596.1387840678417 335.50471694586633 553.6387840678417 261.89255762456634">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="568.3612159321583 409.11687626716633 610.8612159321583 335.50471694586633 596.1387840678417 327.0047169458337 553.6387840678417 400.6168762671337">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="695.8612159321583 327.0047169458337 738.3612159321583 400.6168762671337 723.6387840678417 409.11687626716633 681.1387840678417 335.50471694586633">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="695.8612159321583 482.72903558846633 738.3612159321583 409.11687626716633 723.6387840678417 400.6168762671337 681.1387840678417 474.2290355884337">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="603.5 486.97903558845 688.5 486.97903558845 688.5 469.97903558845 603.5 469.97903558845">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+<svg:polygon class="development road green" points="566.8889727457266 401.46687626713697 609.3889727457266 475.07903558843697 597.6110272542734 481.87903558846307 555.1110272542734 408.26687626716307"/>
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="568.3612159321583 400.6168762671337 610.8612159321583 474.2290355884337 596.1387840678417 482.72903558846633 553.6387840678417 409.11687626716633">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="568.3612159321583 556.3411949097664 610.8612159321583 482.72903558846633 596.1387840678417 474.2290355884337 553.6387840678417 547.8411949097336">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="695.8612159321583 474.2290355884337 738.3612159321583 547.8411949097336 723.6387840678417 556.3411949097664 681.1387840678417 482.72903558846633">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="695.8612159321583 629.9533542310664 738.3612159321583 556.3411949097664 723.6387840678417 547.8411949097336 681.1387840678417 621.4533542310337">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="603.5 634.2033542310501 688.5 634.2033542310501 688.5 617.2033542310501 603.5 617.2033542310501">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="568.3612159321583 547.8411949097336 610.8612159321583 621.4533542310337 596.1387840678417 629.9533542310664 553.6387840678417 556.3411949097664">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="440.86121593215825 629.9533542310664 483.36121593215825 556.3411949097664 468.63878406784164 547.8411949097336 426.13878406784164 621.4533542310337">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="475.99999999999994 560.59119490975 561 560.59119490975 561 543.59119490975 475.99999999999994 543.59119490975">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="568.3612159321583 703.5655135523664 610.8612159321583 629.9533542310664 596.1387840678417 621.4533542310337 553.6387840678417 695.0655135523336">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="475.99999999999994 707.81551355235 561 707.81551355235 561 690.81551355235 475.99999999999994 690.81551355235">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="440.86121593215825 621.4533542310337 483.36121593215825 695.0655135523336 468.63878406784164 703.5655135523664 426.13878406784164 629.9533542310664">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="313.3612159321583 703.5655135523664 355.86121593215825 629.9533542310664 341.13878406784164 621.4533542310337 298.6387840678417 695.0655135523336">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="348.49999999999994 634.2033542310501 433.49999999999994 634.2033542310501 433.49999999999994 617.2033542310501 348.49999999999994 617.2033542310501">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="440.86121593215825 777.1776728736663 483.36121593215825 703.5655135523664 468.63878406784164 695.0655135523336 426.13878406784164 768.6776728736336">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="348.49999999999994 781.42767287365 433.49999999999994 781.42767287365 433.49999999999994 764.42767287365 348.49999999999994 764.42767287365">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="313.3612159321583 695.0655135523336 355.86121593215825 768.6776728736336 341.13878406784164 777.1776728736663 298.6387840678417 703.5655135523664">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="185.8612159321583 629.9533542310664 228.3612159321583 556.3411949097664 213.6387840678417 547.8411949097336 171.1387840678417 621.4533542310337">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="221 560.59119490975 306 560.59119490975 306 543.59119490975 221 543.59119490975">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="313.3612159321583 547.8411949097336 355.86121593215825 621.4533542310337 341.13878406784164 629.9533542310664 298.6387840678417 556.3411949097664">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="221 707.81551355235 306 707.81551355235 306 690.81551355235 221 690.81551355235">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="185.8612159321583 621.4533542310337 228.3612159321583 695.0655135523336 213.6387840678417 703.5655135523664 171.1387840678417 629.9533542310664">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="58.361215932158295 556.3411949097664 100.86121593215832 482.72903558846633 86.13878406784171 474.2290355884337 43.638784067841705 547.8411949097336">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="93.50000000000001 486.97903558845 178.5 486.97903558845 178.5 469.97903558845 93.50000000000001 469.97903558845">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="185.8612159321583 474.2290355884337 228.3612159321583 547.8411949097336 213.6387840678417 556.3411949097664 171.1387840678417 482.72903558846633">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="93.50000000000001 634.2033542310501 178.5 634.2033542310501 178.5 617.2033542310501 93.50000000000001 617.2033542310501">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="58.361215932158295 547.8411949097336 100.86121593215832 621.4533542310337 86.13878406784171 629.9533542310664 43.638784067841705 556.3411949097664">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="58.361215932158295 409.11687626716633 100.86121593215832 335.50471694586633 86.13878406784171 327.0047169458337 43.638784067841705 400.6168762671337">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+<svg:polygon class="development road green" points="184.38897274572665 327.85471694583697 226.88897274572665 401.46687626713697 215.11102725427335 408.26687626716307 172.61102725427335 334.6547169458631"/>
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="185.8612159321583 327.0047169458337 228.3612159321583 400.6168762671337 213.6387840678417 409.11687626716633 171.1387840678417 335.50471694586633">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="185.8612159321583 482.72903558846633 228.3612159321583 409.11687626716633 213.6387840678417 400.6168762671337 171.1387840678417 474.2290355884337">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="58.361215932158295 400.6168762671337 100.86121593215832 474.2290355884337 86.13878406784171 482.72903558846633 43.638784067841705 409.11687626716633">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="313.3612159321583 253.39255762453368 355.86121593215825 327.0047169458337 341.13878406784164 335.50471694586633 298.6387840678417 261.89255762456634">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="313.3612159321583 409.11687626716633 355.86121593215825 335.50471694586633 341.13878406784164 327.0047169458337 298.6387840678417 400.6168762671337">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="221 413.36687626715 306 413.36687626715 306 396.36687626715 221 396.36687626715">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="440.86121593215825 335.50471694586633 483.36121593215825 261.89255762456634 468.63878406784164 253.39255762453368 426.13878406784164 327.0047169458337">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="348.49999999999994 339.75471694585 433.49999999999994 339.75471694585 433.49999999999994 322.75471694585 348.49999999999994 322.75471694585">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="475.99999999999994 413.36687626715 561 413.36687626715 561 396.36687626715 475.99999999999994 396.36687626715">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="440.86121593215825 327.0047169458337 483.36121593215825 400.6168762671337 468.63878406784164 409.11687626716633 426.13878406784164 335.50471694586633">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="440.86121593215825 482.72903558846633 483.36121593215825 409.11687626716633 468.63878406784164 400.6168762671337 426.13878406784164 474.2290355884337">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="440.86121593215825 474.2290355884337 483.36121593215825 547.8411949097336 468.63878406784164 556.3411949097664 426.13878406784164 482.72903558846633">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="313.3612159321583 556.3411949097664 355.86121593215825 482.72903558846633 341.13878406784164 474.2290355884337 298.6387840678417 547.8411949097336">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="348.49999999999994 486.97903558845 433.49999999999994 486.97903558845 433.49999999999994 469.97903558845 348.49999999999994 469.97903558845">
+
+</svg:polygon>
+</svg:g>
+<svg:g class="development-container">
+<svg:polygon class="development road red" points="311.8889727457266 401.46687626713697 354.38897274572656 475.07903558843697 342.6110272542733 481.87903558846307 300.1110272542734 408.26687626716307"/>
+
+</svg:g>
+<svg:g>
+<svg:polygon class="edge" points="313.3612159321583 400.6168762671337 355.86121593215825 474.2290355884337 341.13878406784164 482.72903558846633 298.6387840678417 409.11687626716633">
+
+</svg:polygon>
+</svg:g>
+<svg:g>
+<svg:circle class="port-anchor" cx="475.99999999999994" cy="110.41823898195" r="10.625"/>
+<svg:circle class="port-anchor" cx="561" cy="110.41823898195" r="10.625"/>
+<svg:g class="port-marker port-any">
+<svg:line x1="481.31249999999994" x2="518.5" y1="101.21671906678749" y2="36.80607966065"/>
+<svg:line x1="555.6875" x2="518.5" y1="101.21671906678749" y2="36.80607966065"/>
+<svg:circle class="port-mark" cx="518.5" cy="36.80607966065" r="17"/>
+<svg:text transform="matrix(1,0,0,1, 518.5, 36.80607966065)">3:1</svg:text>
+<svg:circle class="port-hit-area" cx="518.5" cy="36.80607966065" r="25.5">
+
+</svg:circle>
+</svg:g>
+<svg:circle class="port-anchor" cx="688.5" cy="184.03039830325" r="10.625"/>
+<svg:circle class="port-anchor" cx="731" cy="257.64255762455" r="10.625"/>
+<svg:g class="port-marker port-Wool">
+<svg:line x1="699.125" x2="773.5" y1="184.03039830325" y2="184.03039830325"/>
+<svg:line x1="736.3125" x2="773.5" y1="248.4410377093875" y2="184.03039830325"/>
+<svg:circle class="port-mark" cx="773.5" cy="184.03039830325" r="17"/>
+<svg:text transform="matrix(0.5000000000019219,0.8660254037833292,-0.8660254037833292,0.5000000000019219, 773.5, 184.03039830325)">2:1</svg:text>
+<svg:circle class="port-hit-area" cx="773.5" cy="184.03039830325" r="25.5">
+
+</svg:circle>
+</svg:g>
+<svg:circle class="port-anchor" cx="731" cy="404.86687626715" r="10.625"/>
+<svg:circle class="port-anchor" cx="688.5" cy="478.47903558845" r="10.625"/>
+<svg:g class="port-marker port-any">
+<svg:line x1="736.3125" x2="773.5" y1="414.06839618231254" y2="478.47903558845"/>
+<svg:line x1="699.125" x2="773.5" y1="478.47903558845" y2="478.47903558845"/>
+<svg:circle class="port-mark" cx="773.5" cy="478.47903558845" r="17"/>
+<svg:text transform="matrix(-0.500000000001922,0.8660254037833289,-0.8660254037833289,-0.500000000001922, 773.5, 478.47903558845)">3:1</svg:text>
+<svg:circle class="port-hit-area" cx="773.5" cy="478.47903558845" r="25.5">
+
+</svg:circle>
+</svg:g>
+<svg:circle class="port-anchor" cx="603.5" cy="625.7033542310501" r="10.625"/>
+<svg:circle class="port-anchor" cx="561" cy="699.31551355235" r="10.625"/>
+<svg:g class="port-marker port-Wood">
+<svg:line x1="608.8125" x2="646" y1="634.9048741462126" y2="699.31551355235"/>
+<svg:line x1="571.625" x2="646" y1="699.31551355235" y2="699.31551355235"/>
+<svg:circle class="port-mark" cx="646" cy="699.31551355235" r="17"/>
+<svg:text transform="matrix(-0.5000000000019224,0.8660254037833288,-0.8660254037833288,-0.5000000000019224, 646, 699.31551355235)">2:1</svg:text>
+<svg:circle class="port-hit-area" cx="646" cy="699.31551355235" r="25.5">
+
+</svg:circle>
+</svg:g>
+<svg:circle class="port-anchor" cx="433.49999999999994" cy="772.92767287365" r="10.625"/>
+<svg:circle class="port-anchor" cx="348.49999999999994" cy="772.92767287365" r="10.625"/>
+<svg:g class="port-marker port-Grain">
+<svg:line x1="428.18749999999994" x2="390.99999999999994" y1="782.1291927888125" y2="846.53983219495"/>
+<svg:line x1="353.81249999999994" x2="390.99999999999994" y1="782.1291927888125" y2="846.53983219495"/>
+<svg:circle class="port-mark" cx="390.99999999999994" cy="846.53983219495" r="17"/>
+<svg:text transform="matrix(-1,0,0,-1, 390.99999999999994, 846.53983219495)">2:1</svg:text>
+<svg:circle class="port-hit-area" cx="390.99999999999994" cy="846.53983219495" r="25.5">
+
+</svg:circle>
+</svg:g>
+<svg:circle class="port-anchor" cx="221" cy="699.31551355235" r="10.625"/>
+<svg:circle class="port-anchor" cx="178.5" cy="625.7033542310501" r="10.625"/>
+<svg:g class="port-marker port-any">
+<svg:line x1="210.375" x2="136" y1="699.31551355235" y2="699.31551355235"/>
+<svg:line x1="173.1875" x2="136" y1="634.9048741462126" y2="699.31551355235"/>
+<svg:circle class="port-mark" cx="136" cy="699.31551355235" r="17"/>
+<svg:text transform="matrix(-0.5000000000019224,-0.8660254037833288,0.8660254037833288,-0.5000000000019224, 136, 699.31551355235)">3:1</svg:text>
+<svg:circle class="port-hit-area" cx="136" cy="699.31551355235" r="25.5">
+
+</svg:circle>
+</svg:g>
+<svg:circle class="port-anchor" cx="93.50000000000001" cy="478.47903558845" r="10.625"/>
+<svg:circle class="port-anchor" cx="51" cy="404.86687626715" r="10.625"/>
+<svg:g class="port-marker port-Ore">
+<svg:line x1="82.87500000000001" x2="8.499999999999998" y1="478.47903558845" y2="478.47903558845"/>
+<svg:line x1="45.6875" x2="8.499999999999998" y1="414.06839618231254" y2="478.47903558845"/>
+<svg:circle class="port-mark" cx="8.499999999999998" cy="478.47903558845" r="17"/>
+<svg:text transform="matrix(-0.5000000000019221,-0.8660254037833289,0.8660254037833289,-0.5000000000019221, 8.499999999999998, 478.47903558845)">2:1</svg:text>
+<svg:circle class="port-hit-area" cx="8.499999999999998" cy="478.47903558845" r="25.5">
+
+</svg:circle>
+</svg:g>
+<svg:circle class="port-anchor" cx="51" cy="257.64255762455" r="10.625"/>
+<svg:circle class="port-anchor" cx="93.50000000000001" cy="184.03039830325" r="10.625"/>
+<svg:g class="port-marker port-Brick">
+<svg:line x1="45.6875" x2="8.499999999999998" y1="248.4410377093875" y2="184.03039830325"/>
+<svg:line x1="82.87500000000001" x2="8.499999999999998" y1="184.03039830325" y2="184.03039830325"/>
+<svg:circle class="port-mark" cx="8.499999999999998" cy="184.03039830325" r="17"/>
+<svg:text transform="matrix(0.500000000001922,-0.866025403783329,0.866025403783329,0.500000000001922, 8.499999999999998, 184.03039830325)">2:1</svg:text>
+<svg:circle class="port-hit-area" cx="8.499999999999998" cy="184.03039830325" r="25.5">
+
+</svg:circle>
+</svg:g>
+<svg:circle class="port-anchor" cx="221" cy="110.41823898195" r="10.625"/>
+<svg:circle class="port-anchor" cx="306" cy="110.41823898195" r="10.625"/>
+<svg:g class="port-marker port-any">
+<svg:line x1="226.3125" x2="263.5" y1="101.21671906678749" y2="36.80607966065"/>
+<svg:line x1="300.6875" x2="263.5" y1="101.21671906678749" y2="36.80607966065"/>
+<svg:circle class="port-mark" cx="263.5" cy="36.80607966065" r="17"/>
+<svg:text transform="matrix(1,0,0,1, 263.5, 36.80607966065)">3:1</svg:text>
+<svg:circle class="port-hit-area" cx="263.5" cy="36.80607966065" r="25.5">
+
+</svg:circle>
+</svg:g>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="93.50000000000001" cy="184.03039830325" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="178.5" cy="184.03039830325" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="221" cy="257.64255762455" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="178.5" cy="331.25471694585" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="93.50000000000001" cy="331.25471694585" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="51" cy="257.64255762455" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="221" cy="110.41823898195" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="306" cy="110.41823898195" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="348.49999999999994" cy="184.03039830325" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="306" cy="257.64255762455" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="348.49999999999994" cy="36.80607966065" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="433.49999999999994" cy="36.80607966065" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="475.99999999999994" cy="110.41823898195" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="433.49999999999994" cy="184.03039830325" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="561" cy="110.41823898195" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="603.5" cy="184.03039830325" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+<svg:g class="development settlement red" transform="translate(546,242.64255762455002)">
+<svg:rect height="30" style="stroke: black;" width="30"/>
+<svg:line style="stroke:black;" x1="15" x2="15" y1="0" y2="30"/>
+</svg:g>
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="561" cy="257.64255762455" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="475.99999999999994" cy="257.64255762455" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="688.5" cy="184.03039830325" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="731" cy="257.64255762455" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="688.5" cy="331.25471694585" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="603.5" cy="331.25471694585" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="731" cy="404.86687626715" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="688.5" cy="478.47903558845" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+<svg:g class="development settlement green" transform="translate(588.5,463.47903558845)">
+<svg:rect height="30" style="stroke: black;" width="30"/>
+<svg:line style="stroke:black;" x1="15" x2="15" y1="0" y2="30"/>
+</svg:g>
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="603.5" cy="478.47903558845" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="561" cy="404.86687626715" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="731" cy="552.09119490975" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="688.5" cy="625.7033542310501" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="603.5" cy="625.7033542310501" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="561" cy="552.09119490975" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="475.99999999999994" cy="552.09119490975" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="561" cy="699.31551355235" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="475.99999999999994" cy="699.31551355235" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="433.49999999999994" cy="625.7033542310501" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="348.49999999999994" cy="625.7033542310501" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="433.49999999999994" cy="772.92767287365" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="348.49999999999994" cy="772.92767287365" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="306" cy="699.31551355235" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="221" cy="552.09119490975" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="306" cy="552.09119490975" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="221" cy="699.31551355235" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="178.5" cy="625.7033542310501" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="93.50000000000001" cy="478.47903558845" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="178.5" cy="478.47903558845" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="93.50000000000001" cy="625.7033542310501" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="51" cy="552.09119490975" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+<svg:g class="development settlement green" transform="translate(206,389.86687626715)">
+<svg:rect height="30" style="stroke: black;" width="30"/>
+<svg:line style="stroke:black;" x1="15" x2="15" y1="0" y2="30"/>
+</svg:g>
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="221" cy="404.86687626715" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="51" cy="404.86687626715" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="348.49999999999994" cy="331.25471694585" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="306" cy="404.86687626715" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="433.49999999999994" cy="331.25471694585" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="475.99999999999994" cy="404.86687626715" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="433.49999999999994" cy="478.47903558845" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="development-container">
+<svg:g class="development settlement red" transform="translate(333.49999999999994,463.47903558845)">
+<svg:rect height="30" style="stroke: black;" width="30"/>
+<svg:line style="stroke:black;" x1="15" x2="15" y1="0" y2="30"/>
+</svg:g>
+
+</svg:g>
+<svg:g>
+<svg:circle class="vertex" cx="348.49999999999994" cy="478.47903558845" r="17">
+
+</svg:circle>
+</svg:g>
+<svg:g class="port-marker port-any">
+<svg:circle class="port-mark" cx="51" cy="36.80607966065" r="17"/>
+<svg:text transform="matrix(1,0,0,1, 51, 36.80607966065)">4:1</svg:text>
+<svg:circle class="port-hit-area" cx="51" cy="36.80607966065" r="25.5">
+
+</svg:circle>
+</svg:g>
+<script type="text/javascript"><![CDATA[			
+				setTimeout(function() {
+					enableBoardPanZoom(document.getElementById("board"), document.getElementById("boardDiv"));
+				}, 100);
+			]]></script>
+</svg:g>
+
+</svg:svg>
+</div>
+<div id="hud">
+<div><div xmlns="http://www.w3.org/1999/xhtml" xmlns:pil="http://www.livegameengine.com/schemas/pilgrims.xsd" xmlns:svg="http://www.w3.org/2000/svg" xmlns:view="http://www.livegameengine.com/schemas/view.xsd" id="controls"><input type="button" value="End Trade" /><input type="button" value="Clear Trade" /></div></div>
+<div id="playersDiv">
+<ul>
+<li class="player player-1 ">
+
+
+<img height="25" src="http://www.gravatar.com/avatar/55502f40dc8b7c769880b10874abc9d0.jpg?s=25&amp;d=mm" width="25" />
+<span class="role-red">test@example.com</span>
+<ul class="resource-list">
+<li class="resource resource-Brick">
+
+<span>1</span>
+</li>
+<li class="resource resource-Grain">
+
+<span>0</span>
+</li>
+<li class="resource resource-Ore">
+
+<span>1</span>
+</li>
+<li class="resource resource-Wood">
+
+<span>0</span>
+</li>
+<li class="resource resource-Wool">
+
+<span>1</span>
+</li>
+</ul>
+</li>
+<li class="player player-2 current-player">
+
+
+<img height="25" src="http://www.gravatar.com/avatar/55502f40dc8b7c769880b10874abc9d0.jpg?s=25&amp;d=mm" width="25" />
+<span class="role-green">test@example.com</span>
+<ul class="resource-list">
+<li class="resource resource-Brick">
+
+<span>2</span>
+</li>
+<li class="resource resource-Grain">
+
+<span>0</span>
+</li>
+<li class="resource resource-Ore">
+
+<span>0</span>
+</li>
+<li class="resource resource-Wood">
+
+<span>0</span>
+</li>
+<li class="resource resource-Wool">
+
+<span>1</span>
+</li>
+</ul>
+</li>
+</ul>
+
+
+</div>
+</div>
+<div id="tradeDiv" style="height:100px;"><div xmlns="http://www.w3.org/1999/xhtml" xmlns:pil="http://www.livegameengine.com/schemas/pilgrims.xsd" xmlns:svg="http://www.w3.org/2000/svg" xmlns:view="http://www.livegameengine.com/schemas/view.xsd"><p>Give</p><p>Get</p><div class="offer offer-1"><ul class="resource-list"><li class="resource resource-Brick"><span>0</span></li><li class="resource resource-Grain"><span>0</span></li><li class="resource resource-Ore"><span>0</span></li><li class="resource resource-Wood"><span>0</span></li><li class="resource resource-Wool"><span>0</span></li></ul></div><div class="offer offer-1"><ul class="resource-list"><li class="resource resource-Brick"><span>0</span></li><li class="resource resource-Grain"><span>0</span></li><li class="resource resource-Ore"><span>0</span></li><li class="resource resource-Wood"><span>0</span></li><li class="resource resource-Wool"><span>0</span></li></ul></div><div class="offer offer-1bankOffer"><ul class="resource-list"></ul></div></div></div>
+</body>
+</html>

@@ -14,6 +14,8 @@
 	exclude-result-prefixes="xsl xalan fn scxml game ex math">
 	
 	<xsl:param name="game-meta-uri" select="'game://current/meta'" />
+	<xsl:param name="playerId" />
+	
 	<xsl:variable name="meta-doc" select="document($game-meta-uri)" />
 	
 	<xsl:variable name="sqrt3over2" select="0.86602540378" />
@@ -224,7 +226,6 @@
 			<xsl:apply-templates select="pil:edges" />
 			<xsl:apply-templates select="pil:ports" />
 			<xsl:apply-templates select="pil:verteces" />
-			<xsl:call-template name="fourtooneport" />
 			<script type="text/javascript">			
 				setTimeout(function() {
 					enableBoardPanZoom(document.getElementById("board"), document.getElementById("boardDiv"));
@@ -315,13 +316,13 @@
 				<div id="tradeDiv">
 					<xsl:attribute name="style">
 						<xsl:choose>
-							<xsl:when test="count(pil:trade) &gt; 0">height:100px;</xsl:when>
+							<xsl:when test="count(pil:trade) &gt; 0">height:130px;</xsl:when>
 							<xsl:otherwise>height:0;</xsl:otherwise>
 						</xsl:choose>
 					</xsl:attribute>
 									
 					<view:eventHandlerPlaceholder event="board.tradeStarted" mode="attribute">
-						<view:attribute name="style">height:100px;</view:attribute>
+						<view:attribute name="style">height:130px;</view:attribute>
 					</view:eventHandlerPlaceholder>
 					<view:eventHandlerPlaceholder event="board.tradeEnded" mode="attribute">
 						<view:attribute name="style">height:0;</view:attribute>
@@ -423,11 +424,6 @@
 		</input>
 	</xsl:template>
 	
-	
-
-
-	
-	
 	<xsl:template match="pil:trade">
 		<div>
 			<p>Give</p>
@@ -443,9 +439,7 @@
 			<xsl:apply-templates select="pil:player" />
 		</ul>
 	</xsl:template>
-	
-	
-	
+		
 	<xsl:template match="pil:player">
 		<xsl:variable name="color" select="pil:color" />
 		
@@ -472,35 +466,88 @@
 		</li>
 	</xsl:template>
 	
-	<xsl:template match="pil:offer | pil:bankOffer">
+	<xsl:template name="resource-list">
+		<ul class="resource-list">
+			<xsl:apply-templates select="pil:resource">
+				<xsl:sort select="@type" />
+			</xsl:apply-templates>
+		</ul>
+	</xsl:template>
+	
+	<xsl:template match="pil:offer">
+		<xsl:variable name="acceptedTrade"><xsl:value-of select="../pil:offer[@accepted='true']/@color"/></xsl:variable>
+	
 		<xsl:variable name="col" select="@color" />
+		<xsl:variable name="currentPlayer" select="$meta-doc//game:mostRecentState//pil:players/pil:player[../../pil:currentPlayer]" />
+		<xsl:variable name="acceptedPlayer" select="$meta-doc//game:mostRecentState//pil:players/pil:player[pil:color = $acceptedTrade]" />
+		<xsl:variable name="num" select="1+count($meta-doc//game:mostRecentState//pil:player[pil:color = $col]/preceding-sibling::pil:player)" />
 		<div>
-			<xsl:attribute name="class">offer offer-<xsl:value-of select="1+count(../pil:players/pil:player[pil:color = $col]/preceding-sibling::pil:player)" /> <xsl:if test="local-name(.) = 'bankOffer'">bankOffer</xsl:if></xsl:attribute>
+			<xsl:attribute name="class">offer offer-<xsl:value-of select="$num" /></xsl:attribute>
 			
-			<ul class="resource-list">
-				<xsl:apply-templates select="pil:resource">
-					<xsl:sort select="@type" />
-				</xsl:apply-templates>
-			</ul>
+			<xsl:call-template name="resource-list" /> 
+			
+			<xsl:comment>Accepted Trade: '<xsl:value-of select="$acceptedTrade" />'</xsl:comment>
+			<xsl:comment>Player Id: '<xsl:value-of select="$playerId" />'</xsl:comment>
+			<xsl:comment>Accepted Player Id: '<xsl:copy-of select="$acceptedPlayer/pil:playerId" />'</xsl:comment>
+			<xsl:comment>Current player color: '<xsl:value-of select="$currentPlayer/pil:color" />'</xsl:comment>
+			<xsl:comment>Offer Color: '<xsl:value-of select="$col" />'</xsl:comment>
+			
+			<div class="button-box button-accept-trade button-accept-trade-{$num}">
+			
+			
+				<xsl:if test="string-length($acceptedTrade) &gt; 0 and $col = $currentPlayer/pil:color and $acceptedTrade != $col and $playerId = $currentPlayer/pil:playerId">
+					<input type="button" value="Cancel">
+						<view:event on="click" event="cancelTrade" />
+					</input>
+				</xsl:if>
+				<xsl:if test="string-length($acceptedTrade) &gt; 0 and $acceptedTrade = $currentPlayer/pil:color and $acceptedTrade = $col">
+					<input type="button" value="Confirm">
+						<view:event on="click" event="confirmTrade" />
+					</input>
+					<input type="button" value="Reject">
+						<view:event on="click" event="rejectTrade" />
+					</input>
+				</xsl:if>
+				<xsl:if test="string-length($acceptedTrade) = 0 and $playerId = $currentPlayer/pil:playerId">
+					<input type="button" value="Accept">
+						<view:event on="click" event="acceptTrade">
+							<pil:offer color="{@color}" />
+						</view:event>
+					</input>
+				</xsl:if>
+				
+			</div>
 		</div>
 	</xsl:template>
+	
+	<xsl:template match="pil:bankOffer">
+		<xsl:variable name="col" select="@color" />
+		<xsl:variable name="num" select="1+count($meta-doc//game:mostRecentState//pil:player[pil:color = $col]/preceding-sibling::pil:player)" />
+		
+		<div>
+			<xsl:attribute name="class">offer offer-bankOffer-<xsl:value-of select="$num" /></xsl:attribute>
+			
+			<xsl:call-template name="resource-list" />
+		</div>
+	</xsl:template>
+	
 	
 	<xsl:template match="pil:resource">
 		<li class="resource resource-{@type}">
 			<view:event on="click">
 				<xsl:attribute name="event">
 					<xsl:choose>
-						<xsl:when test="local-name(..) = 'offer'">offerResourceClick</xsl:when>
+						<xsl:when test="local-name(..) = 'offer'">resourceClick</xsl:when>
 						<xsl:when test="local-name(..) = 'bankOffer'">bankOfferResourceClick</xsl:when>
 						<xsl:otherwise>resourceClick</xsl:otherwise>
 					</xsl:choose>
 				</xsl:attribute>
 				
-				<xsl:if test="local-name(..) = 'offer'">
-					<pil:playerColor color="{../@color" />
-				</xsl:if>
-								
-				<pil:resource type="{@type}" />
+				<pil:resource type="{@type}">
+					<xsl:if test="local-name(..) = 'offer'">
+						<xsl:attribute name="color"><xsl:value-of select="../@color" /></xsl:attribute>
+					</xsl:if>
+				</pil:resource>
 			</view:event>
 			
 			<span><xsl:value-of select="@count" /></span>
@@ -514,7 +561,6 @@
 	</xsl:template>
 	
 	
-	
 	<xsl:template match="pil:dice">
 		<div>
 			<xsl:for-each select="pil:die">
@@ -524,29 +570,6 @@
 			</xsl:for-each>
 		</div>	
 	</xsl:template>
-	
-	
-	
-		
-	<xsl:template name="fourtooneport">
-		<xsl:variable name="x">0</xsl:variable>
-		<xsl:variable name="y">0</xsl:variable>
-		
-		<xsl:variable name="cx"><xsl:call-template name="cx"><xsl:with-param name="nx" select="$x" /></xsl:call-template></xsl:variable>
-		<xsl:variable name="cy"><xsl:call-template name="cy"><xsl:with-param name="ny" select="$y" /></xsl:call-template></xsl:variable>
-	
-		<svg:g class="port-marker port-any">
-			<svg:circle class="port-mark" cx="{$cx}" cy="{$cy}" r="{$edgeLength * 0.2}" />
-			<svg:text transform="matrix(1,0,0,1, {$cx}, {$cy})">4:1</svg:text>
-			
-			<svg:circle class="port-hit-area" cx="{$cx}" cy="{$cy}" r="{$edgeLength * 0.3}">
-				<view:event on="click" event="portFourToOneClick" />
-			</svg:circle>
-		</svg:g>
-	</xsl:template>
-	
-	
-	
 	
 	<xsl:template match="pil:ports">
 		<svg:g>
@@ -1077,7 +1100,7 @@ function enableBoardPanZoom(board, boardContainer) {
 			delta = -e.detail/3;
 		}
 		else if(e.wheelDeltaY) {
-			delta = -e.wheelDeltaY/360;
+			delta = e.wheelDeltaY/360;
 		}
 		
 		if(delta != 0) {
@@ -1160,332 +1183,417 @@ function enableBoardPanZoom(board, boardContainer) {
 	</xsl:template>
 	
 	<xsl:template name="styles">
-		@font-face {
-			font-family: "Fanwood";
-			src: url("/client/0.2/fonts/Fanwood.otf");
-		}
-		
-		#error-display {
-			position:absolute;
-			left:10%;
-			right:10%;
-			top:20px;
-			height:30px;
-			background:rgba(255,0,0,0.2);
-			text-align:center;
-		}
-		.hide-error {
-			display:none;
-		}
-		.show-error {
-			display:block;
-		}
+@font-face {
+	font-family: "Fanwood";
+	src: url("/client/0.2/fonts/Fanwood.otf");
+}
+
+#error-display {
+	position: absolute;
+	left: 10%;
+	right: 10%;
+	top: 20px;
+	height: 30px;
+	background: rgba(255, 0, 0, 0.2);
+	text-align: center;
+}
+
+.hide-error {
+	display: none;
+}
+
+.show-error {
+	display: block;
+}
+
+.hex {
+	fill: #F5F5FF;
+	stroke: #CCCCCC;
+	stroke-width: 0.5;
+}
+
+.hex-inner {
+	fill: rgba(255, 0, 0, 0.1);
+	stroke: #FF0000;
+	stroke-width: 1px;
+}
+
+.hex-hitarea {
+	fill: #00FF00;
+	opacity: 0;
+}
+
+.hex-hitarea:hover {
+	opacity: 0.5;
+}
+
+.hexlabel-back {
+	fill: #F5F5FF;
+	stroke: #CCCCCC;
+}
+
+.hexlabel {
+	font-family: "Fanwood", serif;
+	font-size: 20px;
+	stroke: #000000;
+	fill: #000000;
+	dominant-baseline: central;
+	text-anchor: middle;
+}
+
+.edge {
+	fill: rgb(0, 255, 0);
+	opacity: 0;
+	stroke: rgb(0, 255, 0);
+	stroke-width: 1;
+}
+
+.edge:hover {
+	opacity: 0.5;
+}
+
+.vertex {
+	fill: rgb(0, 255, 0);
+	opacity: 0;
+	stroke: #00ff00;
+	stroke-width: 1;
+}
+
+.vertex:hover {
+	opacity: 0.5;
+}
+
+.labelemph {
+	stroke: #FF0000;
+	fill: #FF0000;
+}
+
+.Fields {
+	fill: #FFEF4F;
+	stroke: #DDCD2D;
+	stroke-width: 1;
+}
+
+.resource-Grain {
+	background-color: #FFEF4F;
+	color: black;
+}
+
+.Forest {
+	fill: #00932C;
+	stroke: #00710A;
+	stroke-width: 1;
+}
+
+.resource-Wood {
+	background-color: #00932C;
+	color: white;
+}
+
+.Pasture {
+	fill: #BFE882;
+	stroke: #9DC770;
+	stroke-width: 1;
+}
+
+.resource-Wool {
+	background-color: #BFE882;
+	color: black;
+}
+
+.Hills {
+	fill: #B22222;
+	stroke: #900000;
+	stroke-width: 1;
+}
+
+.resource-Brick {
+	background-color: #B22222;
+	color: white;
+}
+
+.Mountains {
+	fill: #787887;
+	stroke: #565665;
+	stroke-width: 1;
+}
+
+.resource-Ore {
+	background-color: #787887;
+	color: white;
+}
+
+.Desert {
+	fill: #fafad2;
+	stroke: #D8D8B0;
+	stroke-width: 1;
+}
+
+.port-hit-area {
+	fill: #00FF00;
+	opacity: 0;
+	stroke: none;
+}
+
+.port-hit-area:hover {
+	opacity: 0.5;
+}
+
+.port-anchor {
+	stroke: #000000;
+	stroke-dasharray: 3, 2;
+	stroke-width: 2px;
+	fill: none;
+}
+
+.port-marker circle.port-mark {
+	stroke: #000000;
+	stroke-dasharray: none;
+	stroke-width: 2px;
+	fill: none;
+}
+
+.port-marker text {
+	font-family: "Fanwood", serif;
+	font-size: 20px;
+	stroke: #000000;
+	fill: #000000;
+	dominant-baseline: central;
+	text-anchor: middle;
+}
+
+.port-marker line {
+	stroke: #000000;
+	stroke-width: 2px;
+	/*marker-end:url(#Triangle);*/
+}
+
+.port-Wool circle.port-mark {
+	fill: #BFE882;
+}
+
+.port-Wheat circle.port-mark,.port-Grain circle.port-mark {
+	fill: #FFEF4F;
+}
+
+.port-Wood circle.port-mark {
+	fill: #00932C;
+}
+
+.port-Ore circle.port-mark {
+	fill: #787887;
+}
+
+.port-Brick circle.port-mark {
+	fill: firebrick;
+}
+
+.port-any circle.port-mark {
+	fill: white;
+}
+
+.red {
+	fill: rgb(255, 0, 0);
+	stroke: black;
+	stroke-width: 1px;
+}
+
+.role-red {
+	color: red;
+}
+
+.green {
+	fill: green;
+	stroke: black;
+	stroke-width: 1px;
+}
+
+.role-green {
+	color: green;
+}
+
+.blue {
+	fill: blue;
+	stroke: black;
+	stroke-width: 1px;
+}
+
+.orange {
+	fill: orange;
+	stroke: black;
+	stroke-width: 1px;
+}
+
+#playersDiv > ul > li {
+	list-style-type: none;
+}
+
+.player img {
+	vertical-align: middle;
+}
+
+.player {
+	position: absolute;
+	top: 5px;
+	bottom: 0px;
+	width: 110px;
+	text-align: left;
+}
+
+.offer {
+	position: absolute;
+	top: 10px;
+	height: 50px;
+	width: 110px;
+}
+
+.current-player {
+	background-color: rgba(255, 230, 90, 0.2);
+}
+
+.button-accept-trade {
+	position:absolute;
+	top: -40px;
+}
+
+.button-accept-trade-1 {
 	
-		.hex {
-			fill:#F5F5FF;
-			stroke: #CCCCCC;
-			stroke-width:0.5;
-		}
-		.hex-inner {
-			fill: rgba(255,0,0,0.1);
-			stroke: #FF0000;
-			stroke-width: 1px;
-		}
-		.hex-hitarea {
-			fill:#00FF00;
-			opacity:0;
-		}
-		.hex-hitarea:hover {
-			opacity:0.5;
-		}
-		.hexlabel-back {
-			fill:#F5F5FF;
-			stroke:#CCCCCC;
-		}
-		.hexlabel {
-			font-family:"Fanwood", serif;
-			font-size:20px;
-			stroke:#000000;
-			fill:#000000;
-			dominant-baseline:central;
-			text-anchor:middle;
-		}
-		.edge {
-		    fill:rgb(0,255,0);
-		    opacity:0;
-		    stroke:rgb(0,255,0);
-		    stroke-width:1;
-		}
-		.edge:hover {
-		    opacity:0.5;
-		}
-		.vertex {
-		    fill:rgb(0,255,0);
-		    opacity:0;
-		    stroke:#00ff00;
-		    stroke-width:1;
-		}
-		.vertex:hover {
-		    opacity:0.5;
-		}
-		.labelemph {
-			stroke:#FF0000;
-			fill:#FF0000;
-		}
-		.Fields {
-		    fill:#FFEF4F;
-		    stroke:#DDCD2D;
-		    stroke-width:1;
-		}
-		.resource-Grain {
-			background-color: #FFEF4F;
-			color: black;
-		}
-		.Forest {
-		    fill:#00932C;
-		    stroke:#00710A;
-		    stroke-width:1;
-		}
-		.resource-Wood {
-			background-color: #00932C;
-			color: white;
-		}
-		.Pasture {
-		    fill:#BFE882;
-		    stroke:#9DC770;
-		    stroke-width:1;
-		}
-		.resource-Wool {
-			background-color: #BFE882;
-			color: black;
-		}
-		.Hills {
-		    fill:#B22222;
-		    stroke:#900000;
-		    stroke-width:1;
-		}
-		.resource-Brick {
-			background-color: #B22222;
-			color: white;
-		}
-		.Mountains {
-		    fill:#787887;
-		    stroke:#565665;
-		    stroke-width:1;
-		}
-		.resource-Ore {
-			background-color: #787887;
-			color: white;
-		}
-		.Desert {
-		    fill:#fafad2;
-		    stroke:#D8D8B0;
-		    stroke-width:1;
-		}
-		
-		.port-hit-area {
-			fill:#00FF00;
-			opacity:0;
-			stroke:none;
-		}
-		.port-hit-area:hover {
-			opacity:0.5;
-		}
-		.port-anchor {
-			stroke: #000000;
-			stroke-dasharray: 3,2;
-			stroke-width: 2px;
-			fill: none;
-		}
-		.port-marker circle.port-mark {
-			stroke: #000000;
-			stroke-dasharray:none;
-			stroke-width: 2px;
-			fill:none;
-		}
-		.port-marker text {
-			font-family:"Fanwood", serif;
-			font-size:20px;
-			stroke:#000000;
-			fill:#000000;
-			dominant-baseline:central;
-			text-anchor:middle;
-		}
-		.port-marker line {
-			stroke: #000000;
-			stroke-width: 2px;
-			/*marker-end:url(#Triangle);*/
-		}
-		
-		
-		.port-Wool circle.port-mark {
-		    fill: #BFE882;
-		}
-		
-		.port-Wheat circle.port-mark, .port-Grain circle.port-mark {
-		    fill: #FFEF4F;
-		}
-		
-		.port-Wood circle.port-mark {
-		    fill: #00932C;
-		}
-		
-		.port-Ore circle.port-mark {
-		    fill: #787887;
-		}
-		
-		.port-Brick circle.port-mark {
-		    fill: firebrick;
-		}
-		.port-any circle.port-mark {
-			fill: white;
-		}
-		
-		.red {
-			fill: rgb(255,0,0);
-			stroke: black;
-			stroke-width: 1px;
-		}
-		.role-red {
-			color: red;
-		}
-		.green {
-			fill: green;
-			stroke: black;
-			stroke-width: 1px;
-		}
-		.role-green {
-			color: green;
-		}
-		.blue {
-			fill: blue;
-			stroke: black;
-			stroke-width: 1px;
-		}
-		.orange {
-			fill: orange;
-			stroke: black;
-			stroke-width: 1px;
-		}
-		
-		#playersDiv > ul > li {
-			list-style-type: none;
-		}
-		
-		.player img {
-			vertical-align: middle;
-		}
-		
-		.player {
-			position:absolute;
-			top: 5px;
-			bottom: 0px;
-			width: 110px;
-			text-align: left;
-		}
-		.offer {
-			position:absolute;
-			top:50px;
-			height: 50px;
-			width: 110px;
-		}
-		.current-player {
-			background-color:rgba(255, 230, 90, 0.2);
-		}
-		
-		.player-1 {
-			left: 40px;
-		}
-		.offer-1 {
-			left: 115px;
-		}
-		.player-2 {
-			left: 150px;
-		}
-		.offer-2 {
-			left: 225px;
-		}
-		.player-3 {
-			left: 260px;
-		}
-		.offer-3 {
-			left: 370px;
-		}
-		.player-4 {
-			left: 370px;
-		}
-		.offer-4 {
-			left: 480px;
-		}
-		
-		#playersDiv {
-			font-family: Fanwood, Serif;
-		}
-		.role-red {
-			color: red;
-		}
-		
-		.resource-list {
-			padding: 0px;
-			margin: 5px;
-		}
-		
-		.resource-list > li {
-			list-style-type:none;
-			float: left;
-			
-			border: solid 1px black;
-			border-radius: 4px;
-			display:block;
-			width: 15px;
-			height: 22px;
-			text-align: center;
-			padding-top: 3px;
-			font-weight: bold;
-		}
-		
-		
-		#boardDiv {
-			position:absolute;
-			top:0;
-			left:0;
-			right:0;
-			bottom:100px;
-			z-index: -100;
-		}
-		#tradeDiv {
-			position:absolute;
-			background: rgba(0,0,255,0.2);
-			left:0;
-			right:0;
-			height:0;
-			bottom:100px;
-			overflow:hidden;
-			
-			transition: all 0.25s ease-in-out;
-		}
-		#hud {
-			position:absolute;
-			height:100px;
-			bottom:0;
-			left:0;
-			right:0;
-			border-top: solid 2px rgba(0,0,255,0.75);
-			background-color: rgba(0,0,255,0.2);
-		}
-		#controls {
-			position:absolute;
-			left: 0;
-			bottom: 0;
-			width: 75px;
-		}
-		#playersDiv {
-			position:absolute;
-			left:75px;
-			bottom: 0;
-			height: 100px;
-		}
-		/*
+}
+.button-accept-trade-2 {
+	
+}
+.button-accept-trade-3 {
+	
+}
+.button-accept-trade-4 {
+	
+}
+
+.player-1 {
+	left: 40px;
+}
+
+.player-2 {
+	left: 150px;
+}
+
+.player-3 {
+	left: 260px;
+}
+
+.player-4 {
+	left: 370px;
+}
+
+
+.offer-1 {
+	top: 50px;
+	left: 115px;
+}
+
+.offer-2 {
+	top: 50px;
+	left: 225px;
+}
+
+.offer-3 {
+	top: 50px;
+	left: 370px;
+}
+
+.offer-4 {
+	top: 50px;
+	left: 480px;
+}
+
+.offer-bankOffer-1 {
+	top: 90px;
+	left: 115px;
+}
+.offer-bankOffer-2 {
+	top: 90px;
+	left: 225px;
+}
+.offer-bankOffer-3 {
+	top: 90px;
+	left: 370px;
+}
+.offer-bankOffer-4 {
+	top: 90px;
+	left: 480px;
+}
+
+#playersDiv {
+	font-family: Fanwood, Serif;
+}
+
+.role-red {
+	color: red;
+}
+
+.resource-list {
+	padding: 0px;
+	margin: 5px;
+}
+
+.resource-list > li {
+	list-style-type: none;
+	float: left;
+	border: solid 1px black;
+	border-radius: 4px;
+	display: block;
+	width: 15px;
+	height: 22px;
+	text-align: center;
+	padding-top: 3px;
+	font-weight: bold;
+}
+
+#boardDiv {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 100px;
+	z-index: -100;
+}
+
+#tradeDiv {
+	font-family: "Fanwood", serif;
+	position: absolute;
+	background: rgba(0, 0, 255, 0.2);
+	left: 0;
+	right: 0;
+	height: 0;
+	bottom: 100px;
+	overflow: hidden;
+	transition: all 0.25s ease-in-out;
+}
+
+#hud {
+	position: absolute;
+	height: 100px;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	border-top: solid 2px rgba(0, 0, 255, 0.75);
+	background-color: rgba(0, 0, 255, 0.2);
+}
+
+#controls {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 75px;
+}
+
+#playersDiv {
+	position: absolute;
+	left: 75px;
+	bottom: 0;
+	height: 100px;
+}
+/*
 		body {
 			overflow:hidden;
 		}

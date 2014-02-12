@@ -168,6 +168,27 @@
 					
 				return false;
 			}
+			function isValidSettlementPlacement(color, x, y) {
+				if(state.board.verteces.vertex.(@x == x && @y == y).development.length() > 0) return false;
+			
+				var adjecentEdges = state.board.edges.edge.( ( @x1 == x && @y1 == y ) || ( @x2 == x && @y2 == y ) );
+			
+				if(adjecentEdges.development.(@color == color).length() == 0) {
+					return false;
+				}
+				
+				for each(var e in adjecentEdges) {
+					var x1 = parseInt(e.@x1);
+					var y1 = parseInt(e.@y1);
+					var x2 = parseInt(e.@x2);
+					var y2 = parseInt(e.@y2);
+					
+					if(( x1 != x || y1 != y ) && state.board.verteces.vertex.(@x == x1 && @y == y1).development.length() > 0) return false;
+					if(( x2 != x || y2 != y ) && state.board.verteces.vertex.(@x == x2 && @y == y2).development.length() > 0) return false;
+				}
+				
+				return true;
+			}
 			function adjacentVertexFromPoly(x, y) {
 				var corners = polyCorners(x, y);
 				
@@ -231,6 +252,26 @@
 						pr.@count = parseInt(pr.@count) + 1;
 					}								
 				}
+			}
+			function isValidOffer(col) {
+				var offer = state.board.trade.offer.(@color == col);
+				var player = state.board.players.player.(color.text() == col);
+				
+				if(offer.length() != 1 || player.length() != 1) {
+					throw "Invalid player or offer color: '" + col + "': " + state.board.players.player.toXMLString() + ", " + state.board.trade.offer.toXMLString();
+					return false;
+				}
+				
+				for each(var r in offer.resource) {
+					var pr = player.resources.resource.(@type == r.@type);
+					
+					if(pr.length() != 1 || parseInt(pr.@count) < parseInt(r.@count)) {
+						log.info("Offer failed: " + pr.length() + " - " + parseInt(pr.@count) + ", " + parseInt(r.@count));
+						return false;
+					}
+				}
+				
+				return true;
 			}
 			function parseCost(cost) {
 				var re = /\s*([0-9]+)\s+([A-Za-z\_][A-Za-z\_0-9]*)\s*/;
@@ -663,6 +704,12 @@
 			<transition target="main.build" />
 		</state>
 		<state id="main.build">
+			<onentry>
+				<script><![CDATA[
+					delete state.board.selectedPort;
+					delete state.board.trade;
+				]]></script>
+			</onentry>
 			<transition event="board.vertexClick" cond="!isCurrentPlayer(_eventdata.gns::player.text())">
 				<game:error message="It is not your turn" />
 			</transition>
@@ -728,6 +775,9 @@
 			<transition event="board.placeSettlement" cond="hasAdjacentDevelopment(_eventdata.vertex.@x, _eventdata.vertex.@y)">
 				<game:error messageExpr="'Vertex (' + _eventdata.vertex.@x + ',' + _eventdata.vertex.@y + ') has an adjacent development'" />	
 			</transition>
+			<transition event="board.placeSettlement" cond="!isValidSettlementPlacement(state.board.players.player[state.board.currentPlayer].color.text(), parseInt(_eventdata.vertex.@x), parseInt(_eventdata.vertex.@y))">
+				<game:error messageExpr="'Not a valid settlement placement.'" />
+			</transition>
 			<transition event="board.placeSettlement" cond="!checkPlayerResourcesAgainstCost(_eventdata.player, state.board.developments.development.(@type == 'settlement').@cost)">
 				<game:error message="You do not have enough resources to build a settlement" />
 			</transition>
@@ -759,7 +809,7 @@
 			<transition event="board.developmentSelected" cond="!checkPlayerResourcesAgainstCost(_eventdata.player, state.board.developments.development.(@type == 'city').@cost)">
 				<game:error message="You do not have enough resources to upgrade this settlement to a city" />
 			</transition>
-			<transition event="board.developmentSelected" target="main.build">
+			<transition event="board.developmentSelected" target="main.build"> 
 				<script><![CDATA[
 					log.info("placing city");
 					debitPlayerResourcesByCost(_eventdata.player, state.board.developments.development.(@type == 'city').@cost);
@@ -812,7 +862,7 @@
 			<transition event="board.portFourToOneClick" cond="!isCurrentPlayer(_eventdata.gns::player.text())">
 				<game:error message="It is not your turn" />
 			</transition>
-			<transition event="board.portFourToOneClick" target="main.tradeWithPort">
+			<transition event="board.portFourToOneClick" target="main.trade">
 				<script><![CDATA[
 					state.board.selectedPort = <port tradeIn="4" tradeOut="1" />
 				]]></script>
@@ -820,10 +870,10 @@
 			
 			<transition event="board.startTrade" target="main.trade" />
 		</state>
-		<state id="main.trade">
+		<state id="main.trade" initial="main.trade.setup">
 			<onentry>
 				<script><![CDATA[
-					state.board.trade = <trade><bankOffer></bankOffer></trade>;
+					state.board.trade = <trade></trade>;
 					
 					for each(var p in state.board.players.player) {
 						var offer = <offer color={p.color.text()}></offer>;
@@ -834,114 +884,287 @@
 						
 						state.board.trade.appendChild(offer);
 					}
+					
+					var bankOffer = <bankOffer color={state.board.players.player[state.board.currentPlayer].color.text()} />;
+					for each(var r in state.board.resources.resource) {
+						bankOffer.appendChild(<resource type={r.@type} count="0" />);
+					}
+					
+					state.board.trade.appendChild(bankOffer);
 				]]></script>
 				<game:sendWatcherEvent event="'tradeStarted'">
 					<content expr="state.board.trade" />
 				</game:sendWatcherEvent>
 			</onentry>
 			
-			<transition event="board.resourceClick" cond="state.board.resources.resource.(@type == _eventdata.resource.@type).length() != 1">
-				<game:error message="Resource does not exist." />
-			</transition>
-			<transition event="board.resourceClick" cond="parseInt(state.board.trade.offer.(@color == state.board.players.player[state.board.currentPlayer].color.text()).resource.(@type == _eventdata.resource.@type).@count) + 1 &gt; parseInt(state.board.players.player[state.board.currentPlayer].resources.resource.(@type == _eventdata.resource.@type).@count)">
-				<game:error messageExpr="'You do not have any additional ' + _eventdata.resource.@type + ' to trade.'" />
-			</transition>
-			<transition event="board.resourceClick">
-				<script><![CDATA[
-					var pp = state.board.players.player.(playerId.text() == _eventdata.gns::player.text());
-					var col = _eventdata.playerColor;
+			<state id="main.trade.setup">
+				<transition event="board.resourceClick" cond="state.board.resources.resource.(@type == _eventdata.resource.@type).length() != 1">
+					<game:error message="Resource does not exist." />
+				</transition>
+				<transition event="board.resourceClick">
+					<script><![CDATA[
+						// did the player click on his own resource?				
+						if(state.board.players.player.(color.text() == _eventdata.resource.@color).playerId.text() == _eventdata.gns::player.text()) {
+							var r = state.board.trade.offer.(@color == _eventdata.resource.@color).resource.(@type == _eventdata.resource.@type);
+							r.@count = parseInt(r.@count) + 1;
+							sendWatcherEvent('board.tradeChange', null, state.board.trade);
+						}
+						// is he the current player
+						else if(isCurrentPlayer(_eventdata.gns::player.text())) {	
+							var r = state.board.trade.offer.(@color == state.board.players.player[state.board.currentPlayer].color.text()).resource.(@type == _eventdata.resource.@type);	
+							r.@count = parseInt(r.@count) + 1;
+							sendWatcherEvent('board.tradeChange', null, state.board.trade);
+						}
+						else {
+							send('game.error', {message:'Click on your own trading area to adjust a trade.'});
+						}					
+						
+					]]></script>
+				</transition>
+							
+				<transition event="board.bankOfferResourceClick" cond="!isCurrentPlayer(_eventdata.gns::player.text())">
+					<game:error message="It is not your turn." />
+				</transition>
+				<transition event="board.bankOfferResourceClick" cond="state.board.resources.resource.(@type == _eventdata.resource.@type).length() != 1">
+					<game:error message="Resource does not exist." />
+				</transition>
+				<transition event="board.bankOfferResourceClick">
+					<script><![CDATA[
+						var r = state.board.trade.bankOffer.resource.(@type == _eventdata.resource.@type);
+						
+						r.@count = parseInt(r.@count) + 1;	
+					]]></script>
+					<game:sendWatcherEvent event="'tradeChange'">
+						<content expr="state.board.trade" />
+					</game:sendWatcherEvent>
+				</transition>
+				
+				<transition event="board.clearTrade">
+					<script><![CDATA[
+						var pp = state.board.players.player.(playerId.text() == _eventdata.gns::player.text());
+						
+						log.info("player: " + pp);
+						log.info("_eventdata: " + _eventdata.toXMLString());
+						log.info("_eventdata.gns::player.text(): " + _eventdata.gns::player.text());
+						
+						for each(var p in pp) {
+							var o = state.board.trade.offer.(@color == p.color.text());
+							
+							//log("offer: " + o.toXMLString());
+							
+							for each(var r in o.resource) {
+								r.@count = 0;
+							}
+							
+							if(isCurrentPlayer(_eventdata.gns::player.text())) {
+								var b = state.board.trade.bankOffer;
+								for each(var r in b.resource) {
+									r.@count = 0;
+								}
+							}
+						}
+					]]></script>
+					<game:sendWatcherEvent event="'tradeChange'">
+						<content expr="state.board.trade" />
+					</game:sendWatcherEvent>
+				</transition> 
+				
+				<transition event="board.acceptTrade" cond="!isCurrentPlayer(_eventdata.gns::player.text())">
+					<game:error message="It is not your turn." />
+				</transition>
+				<transition event="board.acceptTrade" cond="!isValidOffer(state.board.players.player[state.board.currentPlayer].color.text())">
+					<game:error message="You do not have enough resources to trade." />
+				</transition>
+				<transition event="board.acceptTrade" cond="state.board.players.player[state.board.currentPlayer].color.text() == _eventdata.offer.@color" target="main.trade.tradeWithBank">
 					
-					var r = <></>;
-					
-					if(col.length() == 1) {
-						r = state.board.trade.offer.(@color == col.text()).resource.(@type == _eventdata.resource.@type);
-					}
-					else {
-						r = state.board.trade.offer.(@color == state.board.players.player[state.board.currentPlayer].color.text()).resource.(@type == _eventdata.resource.@type);
-					}
-					
-					r.@count = parseInt(r.@count) + 1;	
-				]]></script>
-				<game:sendWatcherEvent event="'tradeChange'">
-					<content expr="state.board.trade" />
-				</game:sendWatcherEvent>
-			</transition>
+				</transition>
+				<transition event="board.acceptTrade" cond="!isValidOffer(_eventdata.offer.@color)">
+					<game:error message="Selected player does not have enough resources to trade." />
+				</transition>
+				<transition event="board.acceptTrade" target="main.trade.waitForPlayerConfirm">
+					<script><![CDATA[
+						state.board.trade.offer.(@color == _eventdata.offer.@color).@accepted = "true";
+					]]></script>
+					<game:sendWatcherEvent event="'tradeChange'">
+						<content expr="state.board.trade" />
+					</game:sendWatcherEvent>
+				</transition>
+				
+				
+				<transition event="board.endTrade" cond="!isCurrentPlayer(_eventdata.gns::player.text())">
+					<game:error message="It is not your turn" />
+				</transition>			
+				<transition event="board.endTrade" target="main.build" />
+			</state>
 			
-			<transition event="board.offerResourceClick" cond="!isCurrentPlayer(_eventdata.gns::player.text())">
-				<game:error message="It is not your turn." />
-			</transition>
-			<transition event="board.offerResourceClick" cond="state.board.resources.resource.(@type == _eventdata.resource.@type).length() != 1">
-				<game:error message="Resource does not exist." />
-			</transition>
-			<transition event="board.offerResourceClick" cond="parseInt(state.board.trade.offer.(@color == state.board.players.player[state.board.currentPlayer].color.text()).resource.(@type == _eventdata.resource.@type).@count) + 1 &gt; parseInt(state.board.players.player[state.board.currentPlayer].resources.resource.(@type == _eventdata.resource.@type).@count)">
-				<game:error messageExpr="'You do not have any additional ' + _eventdata.resource.@type + ' to trade.'" />
-			</transition>
-			<transition event="board.offerResourceClick">
-				<script><![CDATA[
-					var r = state.board.trade.offer.(@color == state.board.players.player[state.board.currentPlayer].color.text()).resource.(@type == _eventdata.resource.@type);
-					
-					r.@count = parseInt(r.@count) + 1;	
-				]]></script>
-				<game:sendWatcherEvent event="'tradeChange'">
-					<content expr="state.board.trade" />
-				</game:sendWatcherEvent>
-			</transition>
+			<state id="main.trade.tradeWithBank">
+				<transition target="main.trade.setup">
+					<script><![CDATA[
+						var currentPlayer = state.board.players.player[state.board.currentPlayer];
+						var playerOffer = state.board.trade.offer.(@color == currentPlayer.color.text());
+						var bankOffer = state.board.trade.bankOffer;
 						
-			<transition event="board.bankOfferResourceClick" cond="!isCurrentPlayer(_eventdata.gns::player.text())">
-				<game:error message="It is not your turn." />
-			</transition>
-			<transition event="board.bankOfferResourceClick" cond="state.board.resources.resource.(@type == _eventdata.resource.@type).length() != 1">
-				<game:error message="Resource does not exist." />
-			</transition>
-			<transition event="board.bankOfferResourceClick">
-				<script><![CDATA[
-					var r = state.board.trade.bankOffer.resource.(@type == _eventdata.resource.@type);
+						// first get all ports that the player has a development on
+						var ports = <>
+							<port resource="" tradeIn="4" tradeOut="1" />
+						</>;
+						
+						var found = false;
+						
+						for each(var v in state.board.verteces.vertex.(development.@color == currentPlayer.color.text())) {
+							for each(var p in state.board.ports.port.(@x == v.@x && @y == v.@y)) {
+								ports += p;
+							}
+						}
+						
+						for each(var p in ports) {							
+							var matches = true;
+							
+							for each(var r in playerOffer.resource) {
+								if(parseInt(r.@count) == 0) {
+									if(p.@resource == "") {}
+									else if(r.@type == p.@resource) { matches = false; }
+									else {}
+								}
+								else if(parseInt(r.@count) == parseInt(p.@tradeIn)) {
+									if(p.@resource == "") {}
+									else if(r.@type == p.@resource) {}
+									else { matches = false; }
+								}
+								else {
+									matches = false;
+								}
+								     
+								if(!matches) break;  
+							}
+							
+							if(!matches) continue;
+														
+							var sum = 0;
+							for each(var r in bankOffer.resource) {
+								sum += parseInt(r.@count);
+							}
+															
+							if(matches && sum == parseInt(p.@tradeOut)) {
+								found = true;
+								break;
+							}
+						}
+						
+						if(found) {
+							for each(var r in playerOffer.resource) {
+								var pr = currentPlayer.resources.resource.(@type == r.@type);
+								
+								pr.@count = parseInt(pr.@count) - parseInt(r.@count);
+								r.@count = 0;
+							}
+							
+							for each(var r in bankOffer.resource) {
+								var pr = currentPlayer.resources.resource.(@type == r.@type);
+								
+								pr.@count = parseInt(pr.@count) + parseInt(r.@count);
+								r.@count = 0;
+							}
+							
+							sendWatcherEvent('board.tradeChange', null, state.board.trade);
+							sendWatcherEvent('board.resourcesDistributed', null, state.board.players[0]);
+						}
+						else {
+							send('game.error', {message:'This trade is invalid.'});
+						}
+					]]></script>
 					
-					r.@count = parseInt(r.@count) + 1;	
-				]]></script>
-				<game:sendWatcherEvent event="'tradeChange'">
-					<content expr="state.board.trade" />
-				</game:sendWatcherEvent>
-			</transition>
+					<game:sendWatcherEvent event="'tradeChange'">
+						<content expr="state.board.trade" />
+					</game:sendWatcherEvent>
+					
+				</transition>
+			</state>
 			
-			<transition event="board.clearTrade">
-				<script><![CDATA[
-					var pp = state.board.players.player.(playerId.text() == _eventdata.gns::player.text());
+			<state id="main.trade.waitForPlayerConfirm">
+				<onentry><script><![CDATA[
+					log.info("onentry: " + state.board.toXMLString());
+				]]></script></onentry>
+				<transition event="board.confirmTrade" cond="state.board.players.player.(color.text() == state.board.trade.offer.(@accepted == 'true').@color).playerId.text() != _eventdata.gns::player.text()">
+					<game:error message="Your trade has not been accepted." />
+				</transition>
+				<transition event="board.confirmTrade" target="main.build"> 
+					<script><![CDATA[
 					
-					log.info("player: " + pp);
-					log.info("_eventdata: " + _eventdata.toXMLString());
-					log.info("_eventdata.gns::player.text(): " + _eventdata.gns::player.text());
+						//log.info("all offers: " + state.board.toXMLString());
 					
-					for each(var p in pp) {
-						var o = state.board.trade.offer.(@color == p.color.text());
+						var playerCurrent = state.board.players.player[state.board.currentPlayer];
 						
-						//log("offer: " + o.toXMLString());
+						var offerCurrent = state.board.trade.offer.(@color == playerCurrent.color.text());
+						var offerAccepted = state.board.trade.offer.(@accepted == "true");
 						
-						for each(var r in o.resource) {
+						var playerAccepted = state.board.players.player.(color.text() == offerAccepted.@color);
+						
+						//log.info("offerCurrent: " + offerCurrent.toXMLString());
+						//log.info("offerAccepted: " + offerAccepted.toXMLString());
+						//log.info("playerCurrent: " + playerCurrent.toXMLString());
+						//log.info("playerAccepted: " + playerAccepted.toXMLString());
+						
+						for each(var r in offerCurrent.resource) {
+							var pr = playerCurrent.resources.resource.(@type == r.@type);
+							pr.@count = parseInt(pr.@count) - parseInt(r.@count);
+							
+							pr = playerAccepted.resources.resource.(@type == r.@type);
+							pr.@count = parseInt(pr.@count) + parseInt(r.@count);
+							
 							r.@count = 0;
 						}
 						
-						if(isCurrentPlayer(_eventdata.gns::player.text())) {
-							var b = state.board.trade.bankOffer;
-							for each(var r in b.resource) {
-								r.@count = 0;
-							}
+						for each(var r in offerAccepted.resource) {
+							var pr = playerCurrent.resources.resource.(@type == r.@type);
+							pr.@count = parseInt(pr.@count) + parseInt(r.@count);
+							
+							pr = playerAccepted.resources.resource.(@type == r.@type);
+							pr.@count = parseInt(pr.@count) - parseInt(r.@count);
+							
+							r.@count = 0;
 						}
-					}
-				]]></script>
-				<game:sendWatcherEvent event="'tradeChange'">
-					<content expr="state.board.trade" />
-				</game:sendWatcherEvent>
-			</transition> 
+					]]></script>
+					
+					<game:sendWatcherEvent event="'resourcesDistributed'">
+						<content expr="state.board.players[0]" />
+					</game:sendWatcherEvent>
+					<game:sendWatcherEvent event="'tradeChange'">
+						<content expr="state.board.trade" />
+					</game:sendWatcherEvent>
+				</transition>
+				
+				<transition event="board.cancelTrade" cond="!isCurrentPlayer(_eventdata.gns::player.text())">
+					<game:error message="You cannot cancel a trade because it is not your turn." />
+				</transition>
+				<transition event="board.cancelTrade" target="main.trade.setup">
+					<script><![CDATA[
+						delete state.board.trade.offer.(@accepted == 'true').@accepted; 
+					]]></script>
+					<game:sendWatcherEvent event="'tradeChange'"> 
+						<content expr="state.board.trade" />
+					</game:sendWatcherEvent>
+				</transition>
+				
+				<transition event="board.rejectTrade" cond="state.board.players.player.(color.text() == state.board.trade.offer.(@accepted == 'true').@color).playerId.text() != _eventdata.gns::player.text()">
+					<game:error message="You cannot reject a trade because your trade was not accepted." />
+				</transition>
+				<transition event="board.rejectTrade" target="main.trade.setup">
+					<script><![CDATA[
+						delete state.board.trade.offer.(@accepted == 'true').@accepted; 
+					]]></script>
+					<game:sendWatcherEvent event="'tradeChange'">
+						<content expr="state.board.trade" />
+					</game:sendWatcherEvent>
+				</transition>
+			</state>
 			
-			<transition event="board.endTrade" cond="!isCurrentPlayer(_eventdata.gns::player.text())">
-				<game:error message="It is not your turn" />
-			</transition>			
-			<transition event="board.endTrade" target="main.build" />
 			<onexit>
-				<script><![CDATA[
-					delete state.board.selectedPort;
-					delete state.board.trade;
+				<script><![CDATA[ 
+					log.info("exiting main.trade state");
+				
+					//delete state.board.selectedPort;
+					//delete state.board.trade;
 				]]></script>
 				<game:sendWatcherEvent event="'tradeEnded'" />
 			</onexit>
